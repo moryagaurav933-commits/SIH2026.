@@ -1,0 +1,76 @@
+# =========================
+# Krishi-Saarthi .gitignore
+# =========================
+
+# === Flutter / Dart ===
+**/build/
+**/.dart_tool/
+**/.packages
+**/.flutter-plugins
+**/.flutter-plugins-dependencies
+**/pubspec.lock
+**/*.iml
+.idea/
+*.log
+
+# === Python ===
+venv/
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.egg-info/
+dist/
+.eggs/
+*.egg
+.mypy_cache/
+.pytest_cache/
+htmlcov/
+.coverage
+
+# === Node / Angular ===
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+.angular/
+dist/
+
+# === IDE ===
+.vscode/settings.json
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# === Environment ===
+.env
+.env.*
+!.env.example
+
+# === ML Models (use Git LFS) ===
+*.gguf
+*.onnx
+*.tflite
+*.pt
+*.pth
+*.h5
+*.pb
+*.bin
+*.safetensors
+
+# === Docker ===
+docker-compose.override.yml
+
+# === Database ===
+*.db
+*.sqlite3
+database/backups/*.sql
+
+# === OS ===
+.DS_Store
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Desktop.ini
