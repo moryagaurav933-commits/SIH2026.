@@ -1,0 +1,1146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>KRISHI-SAARTHI 🌱 Agricultural Intelligence Command Center | SIH 2026</title>
+  <meta name="description" content="Krishi-Saarthi: Offline-First Agricultural Intelligence OS for Indian Farmers. Real-time Disease Telemetry, Kriging Risk Surface, Mandi Analytics & P2P Mesh Operations.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Noto+Sans+Devanagari:wght@400;500;600;700&family=Outfit:wght@400;600;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <!-- Chart.js for 7-Day Risk Trajectories & Mandi Trends -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <!-- Leaflet CSS for GIS Mapping -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+  <link rel="stylesheet" href="./index.css">
+</head>
+<body>
+  <!-- Ambient Organic Background Blobs (Living Farm Atmosphere) -->
+  <div class="organic-blob organic-blob-1" aria-hidden="true"></div>
+  <div class="organic-blob organic-blob-2" aria-hidden="true"></div>
+  <div class="organic-blob organic-blob-3" aria-hidden="true"></div>
+
+  <!-- Floating Nature Leaves Container (JS-Driven) -->
+  <div class="floating-nature-container" id="floatingNature" aria-hidden="true"></div>
+
+  <div class="app-layout">
+    <!-- Sidebar Navigation -->
+    <aside class="sidebar" id="sidebar">
+      <div class="brand">
+        <div class="brand-logo">🌱</div>
+        <div class="brand-info">
+          <span class="brand-title">कृषि-सारथी</span>
+          <span class="brand-subtitle">
+            SIH 2026 • Command OS
+            <span class="brand-version-tag">v2.4 ICAR</span>
+          </span>
+        </div>
+      </div>
+
+      <nav class="nav-menu">
+        <button class="nav-item active" data-tab="overview" id="btn-tab-overview">
+          <span class="nav-icon">📊</span>
+          <span class="nav-label">डैशबोर्ड अवलोकन (Overview)</span>
+        </button>
+        <button class="nav-item" data-tab="vector-map" id="btn-tab-vector-map">
+          <span class="nav-icon">🗺️</span>
+          <span class="nav-label">रोग मानचित्र (Kriging GIS)</span>
+          <span class="badge-alert">LIVE</span>
+        </button>
+        <button class="nav-item" data-tab="diagnoses" id="btn-tab-diagnoses">
+          <span class="nav-icon">🔬</span>
+          <span class="nav-label">फसल निदान (AI Diagnoses)</span>
+        </button>
+        <button class="nav-item" data-tab="farmers" id="btn-tab-farmers">
+          <span class="nav-icon">🌾</span>
+          <span class="nav-label">किसान व खेत (Farmers & Plots)</span>
+        </button>
+        <button class="nav-item" data-tab="mandi" id="btn-tab-mandi">
+          <span class="nav-icon">💰</span>
+          <span class="nav-label">मंडी भाव (Mandi Analytics)</span>
+        </button>
+        <button class="nav-item" data-tab="counterfeit" id="btn-tab-counterfeit">
+          <span class="nav-icon">🧪</span>
+          <span class="nav-label">उर्वरक जाँच (Anti-Counterfeit)</span>
+        </button>
+        <button class="nav-item" data-tab="insurance" id="btn-tab-insurance">
+          <span class="nav-icon">🛡️</span>
+          <span class="nav-label">बीमा लॉकर (Blockchain Locker)</span>
+        </button>
+        <button class="nav-item" data-tab="mesh" id="btn-tab-mesh">
+          <span class="nav-icon">📡</span>
+          <span class="nav-label">P2P मेश नेटवर्क (Mesh Nodes)</span>
+        </button>
+        <button class="nav-item" data-tab="ai-hub" id="btn-tab-ai">
+          <span class="nav-icon">🤖</span>
+          <span class="nav-label">AI व LLM केंद्र (Gemini AI)</span>
+          <span class="badge-alert" style="background: #2E7D32;">AI</span>
+        </button>
+        <button class="nav-item" data-tab="telecom-hub" id="btn-tab-telecom">
+          <span class="nav-icon">📟</span>
+          <span class="nav-label">टेलीकॉम गेटवे (USSD & SMS)</span>
+          <span class="badge-alert" style="background: #0288D1;">2G</span>
+        </button>
+      </nav>
+
+      <div class="sidebar-footer">
+        <div class="theme-switcher">
+          <button class="theme-btn active" data-theme="emerald" id="theme-btn-emerald">🌱 Bio</button>
+          <button class="theme-btn" data-theme="cyber" id="theme-btn-cyber">⚡ Cyber</button>
+          <button class="theme-btn" data-theme="harvest" id="theme-btn-harvest">🌾 Harvest</button>
+        </div>
+        <div class="node-status-card">
+          <div class="node-status-header">
+            <span class="status-indicator pulse-green"></span>
+            <span class="status-text">Backend API Live: 8000</span>
+          </div>
+          <p class="node-status-sub">P2P Store-and-Forward Ferry Active</p>
+          <div class="node-meta">
+            <span>FastAPI v1.0.0</span>
+            <span id="api-latency-badge">12ms</span>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main Content Area -->
+    <main class="main-content">
+      <!-- Top Navigation Header -->
+      <header class="top-header">
+        <div class="header-left">
+          <h1 class="page-title" id="page-title">कृषि-सारथी कमांड सेंटर (Command Center)</h1>
+          <p class="page-subtitle" id="page-subtitle">राष्ट्रीय कृषि बुद्धिमत्ता एवं ऑफ़लाइन P2P मेश संचालन प्रणाली</p>
+        </div>
+        <div class="header-right">
+          <div class="header-stat-pill" style="padding: 6px 12px; gap: 8px;">
+            <span style="color: var(--text-tertiary); font-size: 13px;">🔍</span>
+            <input type="text" id="global-search-input" placeholder="त्वरित खोज (Filter all)..." style="background:transparent; border:none; color:var(--text-primary); font-size:12px; outline:none; width:150px; font-family:inherit;">
+            <span style="background:rgba(255,255,255,0.08); border:1px solid var(--border-glass); border-radius:4px; font-size:9px; padding:1px 5px; font-family:'JetBrains Mono', monospace; color:var(--text-tertiary);">⌘K</span>
+          </div>
+          <div class="header-stat-pill" id="btn-header-ai-pill" style="cursor: pointer; border: 1px solid rgba(16, 185, 129, 0.4); background: rgba(16, 185, 129, 0.12);" title="AI कुंजी स्थिति एवं सेटिंग्स">
+            <span class="pill-label">AI मॉडल:</span>
+            <span class="pill-value" id="header-ai-status" style="color: #6EE7B7; font-weight: 600;">⚡ Gemini / ICAR Live</span>
+          </div>
+          <div class="header-stat-pill">
+            <span class="pill-label">मौसम सिंक:</span>
+            <span class="pill-value" id="current-district-display">UP_LKO (लखनऊ) 28.5°C</span>
+          </div>
+          <div class="clock-badge" id="system-clock">--:--:--</div>
+          <button class="btn-primary" id="btn-refresh-data">
+            <span class="btn-icon">🔄</span> डेटा रीफ्रेश
+          </button>
+        </div>
+      </header>
+
+      <!-- TAB 1: OVERVIEW -->
+      <section class="tab-pane active" id="pane-overview">
+        <!-- KPI Metrics Grid -->
+        <div class="kpi-grid">
+          <div class="kpi-card glass-card">
+            <div class="kpi-header">
+              <span class="kpi-title">पंजीकृत किसान (Farmers)</span>
+              <span class="kpi-icon">🌾</span>
+            </div>
+            <div class="kpi-body">
+              <div class="kpi-value" id="kpi-farmers">3</div>
+              <div class="kpi-sparkline">
+                <svg viewBox="0 0 75 28">
+                  <path d="M0,22 Q18,18 36,12 T75,4" fill="none" stroke="#34D399" stroke-width="2.5" stroke-linecap="round"/>
+                </svg>
+              </div>
+            </div>
+            <div class="kpi-footer text-success">
+              <span>↑ 100% ऑन-डिवाइस सुरक्षित</span>
+              <span class="kpi-tag">Aadhaar Vault</span>
+            </div>
+          </div>
+
+          <div class="kpi-card glass-card">
+            <div class="kpi-header">
+              <span class="kpi-title">फसल रोग निदान (AI Diagnoses)</span>
+              <span class="kpi-icon">🔬</span>
+            </div>
+            <div class="kpi-body">
+              <div class="kpi-value text-accent" id="kpi-diagnoses">3</div>
+              <div class="kpi-sparkline">
+                <svg viewBox="0 0 75 28">
+                  <path d="M0,24 Q22,8 45,18 T75,6" fill="none" stroke="#06B6D4" stroke-width="2.5" stroke-linecap="round"/>
+                </svg>
+              </div>
+            </div>
+            <div class="kpi-footer text-info">
+              <span>औसत सटीकता: 93.1%</span>
+              <span class="kpi-tag">TFLite Int8</span>
+            </div>
+          </div>
+
+          <div class="kpi-card glass-card">
+            <div class="kpi-header">
+              <span class="kpi-title">सक्रिय रोग प्रकोप (Active Outbreaks)</span>
+              <span class="kpi-icon">⚠️</span>
+            </div>
+            <div class="kpi-body">
+              <div class="kpi-value text-warning" id="kpi-diseases">3</div>
+              <div class="kpi-sparkline">
+                <svg viewBox="0 0 75 28">
+                  <path d="M0,10 Q20,24 45,12 T75,18" fill="none" stroke="#FBBF24" stroke-width="2.5" stroke-linecap="round"/>
+                </svg>
+              </div>
+            </div>
+            <div class="kpi-footer text-warning">
+              <span>पीला रतुआ • पछेता झुलसा</span>
+              <span class="kpi-tag">Kriging Alert</span>
+            </div>
+          </div>
+
+          <div class="kpi-card glass-card">
+            <div class="kpi-header">
+              <span class="kpi-title">बीमा दावे (Insurance Settled)</span>
+              <span class="kpi-icon">🛡️</span>
+            </div>
+            <div class="kpi-body">
+              <div class="kpi-value text-purple" id="kpi-claims">1</div>
+              <div class="kpi-sparkline">
+                <svg viewBox="0 0 75 28">
+                  <path d="M0,26 Q25,20 50,14 T75,8" fill="none" stroke="#A78BFA" stroke-width="2.5" stroke-linecap="round"/>
+                </svg>
+              </div>
+            </div>
+            <div class="kpi-footer text-purple">
+              <span>₹42,500 सुरक्षित स्वीकृत</span>
+              <span class="kpi-tag">Polygon Anchor</span>
+            </div>
+          </div>
+
+          <div class="kpi-card glass-card">
+            <div class="kpi-header">
+              <span class="kpi-title">कवर जिले (Districts)</span>
+              <span class="kpi-icon">🗺️</span>
+            </div>
+            <div class="kpi-body">
+              <div class="kpi-value text-cyan" id="kpi-districts">3</div>
+              <div class="kpi-sparkline">
+                <svg viewBox="0 0 75 28">
+                  <path d="M0,18 Q20,10 40,16 T75,5" fill="none" stroke="#38BDF8" stroke-width="2.5" stroke-linecap="round"/>
+                </svg>
+              </div>
+            </div>
+            <div class="kpi-footer text-cyan">
+              <span>UP_LKO, UP_VNS, MP_IND</span>
+              <span class="kpi-tag">IMD Grid</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Quick Visual Row: GIS Preview + Recent Feed -->
+        <div class="grid-2col">
+          <div class="dashboard-panel glass-card">
+            <div class="panel-header">
+              <div class="panel-title-group">
+                <span class="panel-icon">🗺️</span>
+                <h2 class="panel-title">रोग प्रसार मानचित्र (Disease Vector GIS)</h2>
+              </div>
+              <button class="btn-ghost" onclick="switchTab('vector-map')">पूर्ण स्क्रीन नक्शा →</button>
+            </div>
+            <div class="panel-body">
+              <div id="quick-map" class="map-container-small"></div>
+            </div>
+          </div>
+
+          <div class="dashboard-panel glass-card">
+            <div class="panel-header">
+              <div class="panel-title-group">
+                <span class="panel-icon">🔬</span>
+                <h2 class="panel-title">हालिया AI निदान फ़ीड (Live Diagnoses)</h2>
+              </div>
+              <span class="badge-tag">रीयल-टाइम</span>
+            </div>
+            <div class="panel-body">
+              <div class="feed-list" id="quick-diagnoses-feed">
+                <!-- Injected via JS -->
+              </div>
+            </div>
+          </div>
+        <!-- Actionable Risk Center + Action Plan Checklist (from Reference) -->
+        <div class="grid-2col" style="margin-bottom: 24px;">
+          <!-- Actionable Risk Hub -->
+          <div class="dashboard-panel glass-card">
+            <div class="panel-header">
+              <div class="panel-title-group">
+                <span class="panel-icon">🛡️</span>
+                <div>
+                  <h2 class="panel-title">सुरक्षा केंद्र - आज क्या ध्यान दें (What Needs Attention)</h2>
+                  <p class="panel-subtitle">महत्वपूर्ण फ़ील्ड सुरक्षा अलर्ट व स्वचालित कृषि मार्गदर्शन</p>
+                </div>
+              </div>
+              <span class="badge-tag">Daily Safety</span>
+            </div>
+            <div class="panel-body">
+              <div class="risk-center-grid" style="display:grid; grid-template-columns:1fr; gap:12px;">
+                <!-- 1. Disease Risk -->
+                <div class="risk-card high-threat">
+                  <div>
+                    <div class="risk-card-head">
+                      <div class="risk-type">🍄 रोग प्रकोप जोखिम (Disease Threat)</div>
+                      <span class="risk-badge rb-high">🔴 HIGH RISK</span>
+                    </div>
+                    <div class="risk-factor-title">गेहूं पीला रतुआ व पछेता झुलसा चेतावनी</div>
+                    <div class="risk-reason-text">उच्च सापेक्ष आर्द्रता (88%) एवं 21°C तापमान के कारण फफूंद बीजाणुओं का फैलाव तीव्र हो रहा है।</div>
+                  </div>
+                  <div>
+                    <button class="risk-action-btn" onclick="toggleRiskDetail(this, 'rd-disease')">
+                      <span>क्या करें देखें (See What To Do)</span> <span>▼</span>
+                    </button>
+                    <div class="risk-action-detail" id="rd-disease">
+                      👉 <strong>कार्यवाही:</strong> आज ही निचले पत्तों की जांच करें। लक्षण दिखने पर प्रोपिकोनाज़ोल 25 EC (1 मिली/लीटर) या मैंकोज़ेब 75 WP का तुरंत छिड़काव करें।
+                    </div>
+                  </div>
+                </div>
+
+                <!-- 2. Weather Risk -->
+                <div class="risk-card medium-threat">
+                  <div>
+                    <div class="risk-card-head">
+                      <div class="risk-type">🌧️ मौसम जोखिम (Rain & Wind Risk)</div>
+                      <span class="risk-badge rb-medium">🟠 MEDIUM RISK</span>
+                    </div>
+                    <div class="risk-factor-title">अगले 36 घंटों में 25-35mm वर्षा का पूर्वानुमान</div>
+                    <div class="risk-reason-text">अभी कीटनाशक या यूरिया डालने से पानी में बहने का खतरा है। अपनी लागत बचाएं।</div>
+                  </div>
+                  <div>
+                    <button class="risk-action-btn" onclick="toggleRiskDetail(this, 'rd-weather')">
+                      <span>क्या करें देखें (See What To Do)</span> <span>▼</span>
+                    </button>
+                    <div class="risk-action-detail" id="rd-weather">
+                      👉 <strong>कार्यवाही:</strong> गुरुवार दोपहर तक रासायनिक छिड़काव रोकें। खेतों के जल निकासी कोनों को खोलकर सुरक्षित रखें।
+                    </div>
+                  </div>
+                </div>
+
+                <!-- 3. Soil Moisture -->
+                <div class="risk-card good-threat">
+                  <div>
+                    <div class="risk-card-head">
+                      <div class="risk-type">💧 मिट्टी की नमी (Soil Moisture)</div>
+                      <span class="risk-badge rb-good">🟢 SAFE / OPTIMAL</span>
+                    </div>
+                    <div class="risk-factor-title">सतही नमी 42% पर अनुकूल स्थिति</div>
+                    <div class="risk-reason-text">गहरी जड़ों में पर्याप्त नमी उपलब्ध है। अतिरिक्त सिंचाई की वर्तमान में आवश्यकता नहीं।</div>
+                  </div>
+                  <div>
+                    <button class="risk-action-btn" onclick="toggleRiskDetail(this, 'rd-soil')">
+                      <span>क्या करें देखें (See What To Do)</span> <span>▼</span>
+                    </button>
+                    <div class="risk-action-detail" id="rd-soil">
+                      👉 <strong>कार्यवाही:</strong> सिंचाई रोकें। आने वाली बारिश का प्राकृतिक लाभ लें, जिससे भूजल स्तर में सुधार होगा।
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Action Plan Priority Timeline -->
+          <div class="dashboard-panel glass-card">
+            <div class="panel-header">
+              <div class="panel-title-group">
+                <span class="panel-icon">📋</span>
+                <div>
+                  <h2 class="panel-title">आज के 4 जरूरी कार्य (Today's Priority Action Plan)</h2>
+                  <p class="panel-subtitle">प्राथमिकता अनुसार कार्य पूर्ण करें (Tap to tick off)</p>
+                </div>
+              </div>
+              <span class="badge-tag">Interactive</span>
+            </div>
+            <div class="panel-body">
+              <div class="action-plan-container">
+                <div class="action-plan-item" onclick="toggleAction(this.querySelector('.action-plan-check'))">
+                  <div class="action-plan-check"></div>
+                  <div class="action-plan-text">
+                    <strong>01 फसल निरीक्षण:</strong> टमाटर और आलू के पत्तों पर भूरे या पीले छल्लों की जांच करें।
+                  </div>
+                  <span class="action-plan-tag" style="color:#FB7185; border:1px solid rgba(239,68,68,0.4);">🔴 NOW</span>
+                </div>
+
+                <div class="action-plan-item" onclick="toggleAction(this.querySelector('.action-plan-check'))">
+                  <div class="action-plan-check"></div>
+                  <div class="action-plan-text">
+                    <strong>02 मौसम सुरक्षा:</strong> बुधवार शाम से पूर्व दवा छिड़काव स्थगित रखें ताकि बारिश से दवा न धुले।
+                  </div>
+                  <span class="action-plan-tag" style="color:#FB7185; border:1px solid rgba(239,68,68,0.4);">🔴 NOW</span>
+                </div>
+
+                <div class="action-plan-item" onclick="toggleAction(this.querySelector('.action-plan-check'))">
+                  <div class="action-plan-check"></div>
+                  <div class="action-plan-text">
+                    <strong>03 उर्वरक सत्यापन:</strong> नए खरीदे गए डीएपी और यूरिया बैग का बारकोड स्कैनर से मिलान करें।
+                  </div>
+                  <span class="action-plan-tag" style="color:#FBBF24; border:1px solid rgba(245,158,11,0.4);">🟠 TODAY</span>
+                </div>
+
+                <div class="action-plan-item" onclick="toggleAction(this.querySelector('.action-plan-check'))">
+                  <div class="action-plan-check"></div>
+                  <div class="action-plan-text">
+                    <strong>04 मंडी भाव समीक्षा:</strong> गेहूं के दाम में +3.4% वृद्धि का रुख। 2 सप्ताह रोककर बेचने पर ₹140 अधिक मिल सकते हैं।
+                  </div>
+                  <span class="action-plan-tag" style="color:#34D399; border:1px solid rgba(16,185,129,0.4);">🟢 LATER</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Secondary Row: Weather & Mandi Summary -->
+        <div class="grid-2col">
+          <div class="dashboard-panel glass-card">
+            <div class="panel-header">
+              <div class="panel-title-group">
+                <span class="panel-icon">🌤️</span>
+                <h2 class="panel-title">मौसम पूर्वानुमान व कृषि सलाह (Weather & Advisory)</h2>
+              </div>
+              <span class="badge-tag">UP_LKO IMD</span>
+            </div>
+            <div class="panel-body" id="weather-summary-content">
+              <!-- Injected via JS -->
+            </div>
+          </div>
+
+          <div class="dashboard-panel glass-card">
+            <div class="panel-header">
+              <div class="panel-title-group">
+                <span class="panel-icon">💰</span>
+                <h2 class="panel-title">मंडी भाव हाइलाइट्स (Top Mandi Prices)</h2>
+              </div>
+              <button class="btn-ghost" onclick="switchTab('mandi')">सभी 12 फसलें →</button>
+            </div>
+            <div class="panel-body">
+              <div class="mandi-ticker-table-container">
+                <table class="data-table" id="quick-mandi-table">
+                  <thead>
+                    <tr>
+                      <th>फसल (Crop)</th>
+                      <th>मंडी (Mandi)</th>
+                      <th>मॉडल भाव (Modal)</th>
+                      <th>ट्रेंड (Trend)</th>
+                    </tr>
+                  </thead>
+                  <tbody id="quick-mandi-tbody">
+                    <!-- Injected via JS -->
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 2: VECTOR MAP (KRIGING GIS) -->
+      <section class="tab-pane" id="pane-vector-map">
+        <div class="dashboard-panel glass-card full-height-panel">
+          <div class="panel-header">
+            <div class="panel-title-group">
+              <span class="panel-icon">🗺️</span>
+              <div>
+                <h2 class="panel-title">भविष्यवाणी रोग फैलाव नक्शा (Predictive Kriging Vector GIS)</h2>
+                <p class="panel-subtitle">स्थानिक क्रिगिंग इंटरपोलेशन एवं वायु गति दिशा द्वारा 72-घंटे रोग प्रसार चेतावनी</p>
+              </div>
+            </div>
+            <div class="panel-actions">
+              <span class="badge-tag status-live" id="carto-map-badge" style="background:rgba(0, 229, 255, 0.12); color:#00E5FF; border:1px solid rgba(0, 229, 255, 0.4); font-size:11px; padding:6px 12px; border-radius:8px; display:inline-flex; align-items:center; gap:6px;">
+                🛰️ CARTO HD Basemaps Active (15 req/hr Safe Tier)
+              </span>
+              <div class="select-wrapper">
+                <select id="map-disease-filter" class="custom-select">
+                  <option value="all">सभी रोग (All Pathogens)</option>
+                  <option value="Yellow Rust">पीला रतुआ (Yellow Rust - Wheat)</option>
+                  <option value="Late Blight">पछेता झुलसा (Late Blight - Potato)</option>
+                  <option value="Rice Blast">राइस ब्लास्ट (Rice Blast - Paddy)</option>
+                  <option value="White Rust">सफेद रतुआ (White Rust - Mustard)</option>
+                </select>
+              </div>
+              <button class="btn-primary" id="btn-recompute-kriging">
+                <span>⚡</span> क्रिगिंग री-कैलकुलेट करें
+              </button>
+            </div>
+          </div>
+          <div class="panel-body map-panel-body">
+            <div class="map-floating-hud">
+              <span style="font-size:11px; font-weight:700; color:var(--text-secondary); margin-right:4px;">📍 त्वरित फ़्लाई:</span>
+              <button class="map-hud-btn active" data-fly="all">समस्त (All)</button>
+              <button class="map-hud-btn" data-fly="lucknow">लखनऊ</button>
+              <button class="map-hud-btn" data-fly="varanasi">वाराणसी</button>
+              <button class="map-hud-btn" data-fly="agra">आगरा</button>
+              <button class="map-hud-btn" data-fly="gorakhpur">गोरखपुर</button>
+            </div>
+            <div id="full-vector-map" class="map-container-large"></div>
+            <!-- Map Overlay Legend -->
+            <div class="map-legend">
+              <h4 class="legend-title">रोग जोखिम स्तर (Risk Level):</h4>
+              <div class="legend-item"><span class="legend-color-box crit"></span> गंभीर (Critical Risk &gt;85%)</div>
+              <div class="legend-item"><span class="legend-color-box high"></span> उच्च (High Risk 70-85%)</div>
+              <div class="legend-item"><span class="legend-color-box med"></span> मध्यम (Medium Risk 50-70%)</div>
+              <div class="legend-item"><span class="legend-color-box low"></span> सुरक्षित / कम (Low Risk &lt;50%)</div>
+              <div class="legend-divider"></div>
+              <div class="legend-sub">हवा दिशा: पूर्व-उत्तर-पूर्व (14 km/h) • फैलाव कोण 65°</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 3: DIAGNOSES -->
+      <section class="tab-pane" id="pane-diagnoses">
+        <!-- Interactive AI Crop Scanner & Remedies Hub (from Reference) -->
+        <div class="grid-2col" style="margin-bottom: 24px;">
+          <!-- Left: AI Crop Scanner -->
+          <div class="dashboard-panel glass-card">
+            <div class="panel-header">
+              <div class="panel-title-group">
+                <span class="panel-icon">🔬</span>
+                <div>
+                  <h2 class="panel-title">फसल रोग AI स्कैनर व 7-दिवसीय जोखिम (AI Crop Scanner)</h2>
+                  <p class="panel-subtitle">पत्ते की फोटो अपलोड करें या 1-क्लिक डेमो सैंपल चुनें</p>
+                </div>
+              </div>
+              <span class="badge-tag status-live">TFLite Neural Net</span>
+            </div>
+            <div class="panel-body">
+              <!-- 1-Click Demo Samples Row -->
+              <div class="sample-leaf-row">
+                <span style="font-size:11.5px; font-weight:700; color:var(--text-secondary); align-self:center;">⚡ डेमो पत्ती:</span>
+                <button class="sample-leaf-btn" onclick="loadSampleLeaf('tomato')">🍅 टमाटर (Early Blight)</button>
+                <button class="sample-leaf-btn" onclick="loadSampleLeaf('wheat')">🌾 गेहूं (Yellow Rust)</button>
+                <button class="sample-leaf-btn" onclick="loadSampleLeaf('potato')">🥔 आलू (Late Blight)</button>
+                <button class="sample-leaf-btn" onclick="loadSampleLeaf('healthy')">🌿 स्वस्थ पत्ती (Healthy)</button>
+              </div>
+
+              <!-- Upload Dropzone with Laser Scanner Viewfinder -->
+              <div class="scanner-viewfinder" id="upZone" style="cursor:pointer; min-height:140px; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; padding:20px; position:relative;">
+                <div class="scanner-crosshair-tl"></div>
+                <div class="scanner-crosshair-tr"></div>
+                <div class="scanner-crosshair-bl"></div>
+                <div class="scanner-crosshair-br"></div>
+                <div class="scanner-laser" id="scannerLaser"></div>
+                <input type="file" accept="image/*" onchange="analyzeDisease(event)" style="position:absolute; inset:0; opacity:0; cursor:pointer; width:100%; height:100%; z-index:10;">
+                <div style="font-size:32px; margin-bottom:8px;">📷</div>
+                <div style="font-size:13px; font-weight:700; color:var(--text-primary);" id="upText">खेत से पत्ते की फोटो खींचें या यहाँ ड्रैग करें</div>
+                <div style="font-size:11px; color:var(--text-tertiary); margin-top:4px;">JPG, PNG समर्थित • TFLite ऑन-डिवाइस 0.85s में परिणाम</div>
+              </div>
+
+              <!-- Preview Image Wrap -->
+              <div class="preview-image-wrap" id="prevWrap">
+                <img class="prev-img" id="prevImg" alt="Crop Leaf Preview">
+              </div>
+
+              <!-- Diagnosis Result Box -->
+              <div class="disease-result" id="disRes">
+                <div class="diagnosis-badge diag-danger" id="dBadge">
+                  ⚠️ Early Blight (अगेती झुलसा) • AI सटीकता: 94.2%
+                </div>
+                <div class="diag-details-box" id="dBox">
+                  <!-- Populated via JS -->
+                </div>
+              </div>
+
+              <!-- 7-Day Disease Risk Trajectory Timeline -->
+              <div class="forecast-risk-panel" id="forecastRiskPanel">
+                <div class="forecast-risk-head">
+                  <div>
+                    <span style="font-size:10px; text-transform:uppercase; letter-spacing:0.05em; color:var(--primary); font-weight:700; display:block;">स्थानिक पूर्वानुमान (Spatial Kriging)</span>
+                    <div class="fr-title">अगले 7 दिनों में रोग फैलाव की संभावना (Spore Risk Trajectory)</div>
+                  </div>
+                  <span class="fr-sub">Chance of spreading</span>
+                </div>
+                <div class="fr-timeline" id="riskTimeline">
+                  <!-- Injected via JS -->
+                </div>
+                <div class="fr-why" id="frWhy">
+                  <strong>जोखिम क्यों बढ़ रहा है?</strong> 88% आर्द्रता एवं 21°C तापमान फंगल स्पोर्स के गुणन के लिए आदर्श है। 24 घंटे में निरीक्षण आवश्यक।
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Right: What Should I Do? Treatment & Remedies Hub -->
+          <div class="dashboard-panel glass-card">
+            <div class="panel-header">
+              <div class="panel-title-group">
+                <span class="panel-icon">💊</span>
+                <div>
+                  <h2 class="panel-title">उपचार व समाधान केंद्र (What Should I Do?)</h2>
+                  <p class="panel-subtitle">ICAR एवं CIBRC प्रमाणित समाधान व जैविक देशी इलाज</p>
+                </div>
+              </div>
+              <span class="badge-tag">ICAR Certified</span>
+            </div>
+            <div class="panel-body">
+              <!-- Circular Animated Health Score Gauge -->
+              <div class="health-score-container">
+                <svg class="health-ring-svg" width="80" height="80" viewBox="0 0 80 80">
+                  <circle class="rng-bg" cx="40" cy="40" r="32"/>
+                  <circle class="rng-fill" id="hring" cx="40" cy="40" r="32"/>
+                </svg>
+                <div style="flex:1;">
+                  <div class="hscore-val" id="hscore">65/100</div>
+                  <div class="hscore-label" id="hscore-label">मध्यम स्वास्थ्य जोखिम (Moderate Stress)</div>
+                  <div style="font-size:11px; color:var(--text-tertiary); margin-top:2px;">समय पर उपचार से 98% फसल बचाव संभव</div>
+                </div>
+              </div>
+
+              <!-- 3-Tab Remedies Switcher -->
+              <div style="margin-top: 18px;">
+                <div class="remedy-tab-bar">
+                  <button class="remedy-tab-btn active" onclick="swTab(this, 'rt-chemical')">💊 रासायनिक (CIBRC)</button>
+                  <button class="remedy-tab-btn" onclick="swTab(this, 'rt-organic')">🌿 जैविक देशी इलाज</button>
+                  <button class="remedy-tab-btn" onclick="swTab(this, 'rt-prevention')">🛡️ भविष्य रोकथाम</button>
+                </div>
+
+                <div class="treatment-content-box" id="treatBox" style="background:rgba(14,21,38,0.5); border:1px solid var(--border-glass); border-radius:var(--radius-md); padding:16px;">
+                  <div class="remedy-tab-pane active" id="rt-chemical">
+                    <div style="font-weight:700; color:#38BDF8; font-size:13px; margin-bottom:6px;">💊 अनुशंसित फफूंदनाशी (Certified Fungicide):</div>
+                    <div style="font-size:12.5px; line-height:1.55; color:#E2E8F0;" id="treat-chemical-text">
+                      प्रोपिकोनाज़ोल 25% EC (टिल्ट) @ 1 मिली प्रति लीटर पानी या मैंकोज़ेब 75% WP @ 2 ग्राम प्रति लीटर पानी का छिड़काव पत्तियों के नीचे करें। 7 दिन बाद दोहराएं।
+                    </div>
+                  </div>
+                  <div class="remedy-tab-pane" id="rt-organic">
+                    <div style="font-weight:700; color:#34D399; font-size:13px; margin-bottom:6px;">🌿 जैविक एवं देशी समाधान (Organic Bio Solutions):</div>
+                    <ul class="rlist" id="treat-organic-list" style="margin:0; padding-left:18px; line-height:1.6; color:#E2E8F0; font-size:12px;">
+                      <li>नीम तेल (5ml/L पानी + 2 बूंद शैम्पू) का हर 5 दिन में छिड़काव करें।</li>
+                      <li>खट्टी छाछ (1 भाग छाछ + 5 भाग पानी + 5 ग्राम हल्दी) का पर्ण छिड़काव।</li>
+                      <li>रोगग्रस्त पत्तियों को तुरंत तोड़कर खेत से दूर गड्ढे में दबाएं।</li>
+                    </ul>
+                  </div>
+                  <div class="remedy-tab-pane" id="rt-prevention">
+                    <div style="font-weight:700; color:#FBBF24; font-size:13px; margin-bottom:6px;">🛡️ आगामी फसल सुरक्षा सावधानियां (Prevention Protocol):</div>
+                    <div style="font-size:12.5px; line-height:1.55; color:#E2E8F0;" id="treat-prevention-text">
+                      पौधों की जड़ों पर पानी दें, पत्तों के ऊपर फव्वारा न चलाएं। हवा के प्रवाह के लिए उचित दूरी (spacing) बनाए रखें। यूरिया का अत्यधिक उपयोग बंद करें।
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Quick Dispatch Actions -->
+              <div style="display:flex; gap:10px; margin-top:16px; flex-wrap:wrap;">
+                <button class="btn-primary" onclick="broadcastSMSForDisease()" style="flex:1;">
+                  📢 किसानों को SMS चेतावनी भेजें
+                </button>
+                <button class="btn-ghost" onclick="switchTab('insurance')" style="flex:1;">
+                  🛡️ बीमा लॉकर में साक्ष्य जोड़ें →
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Full Registry Table -->
+        <div class="dashboard-panel glass-card">
+          <div class="panel-header">
+            <div class="panel-title-group">
+              <span class="panel-icon">📋</span>
+              <div>
+                <h2 class="panel-title">फसल रोग निदान रजिस्ट्री (Crop Diagnoses Registry)</h2>
+                <p class="panel-subtitle">TFLite ऑन-डिवाइस न्यूरल नेटवर्क द्वारा सत्यापित फ़ील्ड निदान</p>
+              </div>
+            </div>
+            <input type="text" id="diagnoses-search-input" class="search-input" placeholder="रोग, फसल या जिला खोजें...">
+          </div>
+          <div class="panel-body">
+            <div class="table-responsive">
+              <table class="data-table" id="full-diagnoses-table">
+                <thead>
+                  <tr>
+                    <th>रोग का नाम (Disease)</th>
+                    <th>फसल (Crop)</th>
+                    <th>सटीकता (Confidence)</th>
+                    <th>गंभीरता (Severity)</th>
+                    <th>जिला (District)</th>
+                    <th>उपचार सलाह (Treatment Recommendation)</th>
+                    <th>तारीख / समय</th>
+                  </tr>
+                </thead>
+                <tbody id="full-diagnoses-tbody">
+                  <!-- Injected via JS -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 4: FARMERS & PLOTS -->
+      <section class="tab-pane" id="pane-farmers">
+        <div class="dashboard-panel glass-card">
+          <div class="panel-header">
+            <div class="panel-title-group">
+              <span class="panel-icon">🌾</span>
+              <div>
+                <h2 class="panel-title">पंजीकृत किसान एवं खेत विवरण (Farmers & Farm Plots)</h2>
+                <p class="panel-subtitle">ऑफ़लाइन सिंक नोड्स, प्लॉट जिओ-फेंसिंग और फसल चरण</p>
+              </div>
+            </div>
+          </div>
+          <div class="panel-body">
+            <div class="table-responsive">
+              <table class="data-table" id="farmers-table">
+                <thead>
+                  <tr>
+                    <th>किसान नाम</th>
+                    <th>जिला / राज्य</th>
+                    <th>डिवाइस आईडी</th>
+                    <th>खेत का नाम (Plot)</th>
+                    <th>फसल व किस्म</th>
+                    <th>क्षेत्रफल (Acre)</th>
+                    <th>स्थिति (Status)</th>
+                  </tr>
+                </thead>
+                <tbody id="farmers-tbody">
+                  <!-- Injected via JS -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 5: MANDI -->
+      <section class="tab-pane" id="pane-mandi">
+        <div class="dashboard-panel glass-card">
+          <div class="panel-header">
+            <div class="panel-title-group">
+              <span class="panel-icon">💰</span>
+              <div>
+                <h2 class="panel-title">दैनिक मंडी भाव विश्लेषण (Mandi Market Intelligence)</h2>
+                <p class="panel-subtitle">Agmarknet स्रोत • 12 मुख्य कमोडिटीज़ • मूल्य विचलन व ट्रेंड्स</p>
+              </div>
+            </div>
+            <input type="text" id="mandi-search-input" class="search-input" placeholder="फसल या मंडी खोजें (उदा. गेहूं, लखनऊ)...">
+          </div>
+          <div class="panel-body">
+            <!-- Commodity Category Filter Chips -->
+            <div class="mandi-category-chips">
+              <button class="mandi-chip active" data-cat="all" onclick="filterMandiCategory('all', this)">🌾 समस्त फसलें (All Crops)</button>
+              <button class="mandi-chip" data-cat="cereals" onclick="filterMandiCategory('cereals', this)">🌾 अनाज (Wheat, Rice, Maize)</button>
+              <button class="mandi-chip" data-cat="pulses" onclick="filterMandiCategory('pulses', this)">🌱 दलहन (Gram, Arhar, Moong)</button>
+              <button class="mandi-chip" data-cat="vegetables" onclick="filterMandiCategory('vegetables', this)">🥔 सब्जियां (Potato, Tomato, Onion)</button>
+              <button class="mandi-chip" data-cat="oilseeds" onclick="filterMandiCategory('oilseeds', this)">🌻 तिलहन (Mustard, Soybean)</button>
+            </div>
+
+            <div class="table-responsive">
+              <table class="data-table" id="full-mandi-table">
+                <thead>
+                  <tr>
+                    <th>फसल (Commodity)</th>
+                    <th>किस्म (Variety)</th>
+                    <th>मंडी बाज़ार (Market)</th>
+                    <th>जिला</th>
+                    <th>न्यूनतम (Min)</th>
+                    <th>अधिकतम (Max)</th>
+                    <th>मॉडल भाव (Modal/Qtl)</th>
+                    <th>मूल्य बदलाव (Trend)</th>
+                  </tr>
+                </thead>
+                <tbody id="full-mandi-tbody">
+                  <!-- Injected via JS -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 6: COUNTERFEIT -->
+      <section class="tab-pane" id="pane-counterfeit">
+        <div class="grid-2col">
+          <!-- Live Verifier Simulator -->
+          <div class="dashboard-panel glass-card">
+            <div class="panel-header">
+              <div class="panel-title-group">
+                <span class="panel-icon">🧪</span>
+                <h2 class="panel-title">उर्वरक एवं बीज बारकोड सत्यापन परीक्षक (Live Verifier)</h2>
+              </div>
+            </div>
+            <div class="panel-body">
+              <p class="panel-description">
+                बारकोड या QR कोड प्रविष्ट करें। सिस्टम स्थानीय ऑन-डिवाइस क्रिप्टोग्राफिक रजिस्ट्री से तत्काल सत्यापन करता है।
+              </p>
+              <div class="verify-form">
+                <div class="scanner-viewfinder">
+                  <div class="scanner-crosshair-tl"></div>
+                  <div class="scanner-crosshair-tr"></div>
+                  <div class="scanner-crosshair-bl"></div>
+                  <div class="scanner-crosshair-br"></div>
+                  <div style="position:relative; z-index:2;">
+                    <label style="font-size:11px; color:#38BDF8; font-weight:700; display:block; margin-bottom:8px; letter-spacing:0.04em; text-transform:uppercase;">
+                      ⚡ होलोग्राफिक लेजर स्कैनर (Active HUD Viewfinder)
+                    </label>
+                    <div class="input-group" style="display:flex; gap:10px;">
+                      <input type="text" id="verify-barcode-input" class="search-input" value="8901234567890" placeholder="बारकोड (उदा. 8901234567890)..." style="flex:1;">
+                      <button class="btn-primary" id="btn-run-verify">जांचें (Verify)</button>
+                    </div>
+                  </div>
+                </div>
+                <div class="quick-test-btns" style="display:flex; gap:10px; margin-bottom:12px;">
+                  <button class="btn-preset genuine" id="preset-genuine">✅ IFFCO असली नैनो यूरिया</button>
+                  <button class="btn-preset counterfeit" id="preset-fake">❌ पारस नकली प्रतिबंधित यूरिया</button>
+                </div>
+              </div>
+
+              <!-- Verification Result Card -->
+              <div id="verify-result-box" class="verify-result-box">
+                <!-- Populated via JS -->
+              </div>
+            </div>
+          </div>
+
+          <!-- Registry Log -->
+          <div class="dashboard-panel glass-card">
+            <div class="panel-header">
+              <div class="panel-title-group">
+                <span class="panel-icon">📋</span>
+                <h2 class="panel-title">अधिकृत एवं प्रतिबंधित उर्वरक रजिस्ट्री (Registry Log)</h2>
+              </div>
+            </div>
+            <div class="panel-body">
+              <div class="registry-list" id="registry-log-list">
+                <!-- Populated via JS -->
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 7: INSURANCE -->
+      <section class="tab-pane" id="pane-insurance">
+        <div class="dashboard-panel glass-card">
+          <div class="panel-header">
+            <div class="panel-title-group">
+              <span class="panel-icon">🛡️</span>
+              <div>
+                <h2 class="panel-title">टैम्पर-प्रूफ बीमा दावा लॉकर (Tamper-Proof Insurance Evidence)</h2>
+                <p class="panel-subtitle">फसल क्षति वीडियो प्रमाण, सेंसर मेटाडेटा वॉटरमार्क एवं पॉलीगॉन ब्लॉकचेन सत्यापन</p>
+              </div>
+            </div>
+          </div>
+          <div class="panel-body" id="insurance-claims-container">
+            <!-- Populated via JS -->
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 8: MESH -->
+      <section class="tab-pane" id="pane-mesh">
+        <div class="dashboard-panel glass-card">
+          <div class="panel-header">
+            <div class="panel-title-group">
+              <span class="panel-icon">📡</span>
+              <div>
+                <h2 class="panel-title">P2P मेश नेटवर्क टोपोलॉजी (P2P Mesh Network Topology)</h2>
+                <p class="panel-subtitle">Google Nearby Connections • स्टोर-एंड-फ़ॉरवर्ड फेरी नोड्स • 0 KB इंटरनेट आवश्यक</p>
+              </div>
+            </div>
+            <span class="badge-tag status-live">3 मेश नोड्स सक्रिय</span>
+          </div>
+          <div class="panel-body" id="mesh-nodes-container">
+            <!-- Populated via JS -->
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 9: AI & LLM CENTER -->
+      <section class="tab-pane" id="pane-ai-hub">
+        <div class="kpi-grid">
+          <div class="kpi-card glass-card">
+            <div class="kpi-header">
+              <span class="kpi-title">सक्रिय AI मॉडल (Active Engine)</span>
+              <span class="kpi-icon">🤖</span>
+            </div>
+            <div class="kpi-value text-accent" id="ai-hub-active-model">Gemini 2.5 Flash</div>
+            <div class="kpi-footer text-success">
+              <span id="ai-hub-key-status-badge">🟢 API Key सक्रिय</span>
+              <span class="kpi-tag">ICAR RAG</span>
+            </div>
+          </div>
+          <div class="kpi-card glass-card">
+            <div class="kpi-header">
+              <span class="kpi-title">फ्री टियर कोटा सुरक्षा (Quota Guard)</span>
+              <span class="kpi-icon">🛡️</span>
+            </div>
+            <div class="kpi-value text-cyan" id="ai-hub-quota-display">15 / 15 शेष</div>
+            <div class="kpi-footer text-info">
+              <span id="ai-hub-quota-status">स्लाइडिंग विंडो (15 req/hr)</span>
+              <span class="kpi-tag">Zero-Leak Safe</span>
+            </div>
+          </div>
+          <div class="kpi-card glass-card">
+            <div class="kpi-header">
+              <span class="kpi-title">औसत लेटेंसी व कैशे (Latency & Cache)</span>
+              <span class="kpi-icon">⚡</span>
+            </div>
+            <div class="kpi-value" id="ai-hub-latency">182 ms</div>
+            <div class="kpi-footer text-info">
+              <span id="ai-hub-cache-stats">SHA-256 Memory Cache</span>
+              <span class="kpi-tag">Instant</span>
+            </div>
+          </div>
+          <div class="kpi-card glass-card">
+            <div class="kpi-header">
+              <span class="kpi-title">ज्ञान आधार (Knowledge Depth)</span>
+              <span class="kpi-icon">📚</span>
+            </div>
+            <div class="kpi-value text-warning">50+ फसलें</div>
+            <div class="kpi-footer text-muted">
+              <span>CIBRC कीटनाशक मानक 2026</span>
+              <span class="kpi-tag">ICAR Approved</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="dashboard-grid-2col" style="display:grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 20px;">
+          <!-- Left: API Key & Model Configuration -->
+          <div class="dashboard-panel glass-card">
+            <div class="panel-header">
+              <div class="panel-title-group">
+                <span class="panel-icon">🔑</span>
+                <div>
+                  <h2 class="panel-title">Google Gemini API Key कॉन्फ़िगरेशन</h2>
+                  <p class="panel-subtitle">लाइव LLM और मल्टीमॉडल विज़न लीफ डायग्नोसिस हेतु API कुंजी दर्ज करें</p>
+                </div>
+              </div>
+            </div>
+            <div class="panel-body">
+              <div class="input-group" style="display:flex; gap:10px; margin-bottom:12px;">
+                <input type="password" id="input-gemini-key" class="search-input" placeholder="Google Gemini API Key दर्ज करें (AIzaSy...)..." style="flex:1;">
+                <button class="btn-primary" id="btn-save-ai-key">सहेजें व टेस्ट करें (Save)</button>
+              </div>
+              <div id="ai-key-feedback" style="font-size:13px; margin-bottom:16px; color:#94A3B8;">
+                💡 Google AI Studio (<a href="https://aistudio.google.com" target="_blank" style="color:#4CAF50;">aistudio.google.com</a>) से निशुल्क API Key प्राप्त करें।
+              </div>
+
+              <div style="border-top: 1px solid var(--border-glass); padding-top: 16px;">
+                <h3 style="font-size:14px; margin-bottom:10px; color:#A5D6A7;">त्वरित एग्रोनॉमिक प्रश्न टेस्ट (Quick Prompts):</h3>
+                <div class="quick-test-btns" style="display:flex; flex-wrap:wrap; gap:8px;">
+                  <button class="btn-preset btn-ai-prompt" data-query="गेहूं में पीला रतुआ (Yellow Rust) का रासायनिक और जैविक इलाज बताएं।">🌾 गेहूं पीला रतुआ</button>
+                  <button class="btn-preset btn-ai-prompt" data-query="धान में झुलसा रोग (Paddy Blast) हेतु CIBRC अनुमोदित स्प्रे दवा क्या है?">🌾 धान झुलसा (Blast)</button>
+                  <button class="btn-preset btn-ai-prompt" data-query="कपास में गुलाबी सुंडी (Pink Bollworm) की प्रति एकड़ दवा और फेरोमोन ट्रैप विधि।">🌿 कपास गुलाबी सुंडी</button>
+                  <button class="btn-preset btn-ai-prompt" data-query="PM-KISAN योजना की 17वीं किस्त का लाभ पाने हेतु ई-केवाईसी कैसे करें?">🏛️ PM-KISAN योजना</button>
+                </div>
+              </div>
+
+              <!-- Multimodal Leaf Diagnosis Demo -->
+              <div style="margin-top:20px; border-top: 1px solid var(--border-glass); padding-top:16px;">
+                <h3 style="font-size:14px; margin-bottom:10px; color:#A5D6A7;">मल्टीमॉडल लीफ विज़न निदान (Multimodal Vision):</h3>
+                <div style="display:flex; gap:10px; flex-wrap:wrap;">
+                  <button class="btn-preset" id="btn-sample-leaf-wheat">🍃 गेहूं पत्ती नमूना</button>
+                  <button class="btn-preset" id="btn-sample-leaf-rice">🍃 धान पत्ती नमूना</button>
+                  <button class="btn-preset" id="btn-sample-leaf-tomato">🍃 टमाटर पत्ती नमूना</button>
+                </div>
+                <div id="leaf-diagnosis-result-box" style="margin-top:12px; display:none;"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Right: Interactive Live AI Agronomist Chat -->
+          <div class="dashboard-panel glass-card" style="display:flex; flex-direction:column; height: 620px;">
+            <div class="panel-header">
+              <div class="panel-title-group">
+                <span class="panel-icon">💬</span>
+                <div>
+                  <h2 class="panel-title">लाइव AI कृषि वैज्ञानिक (Krishi Copilot)</h2>
+                  <p class="panel-subtitle">ICAR वैज्ञानिक दिशानिर्देशों पर आधारित 24x7 कृषि सलाह</p>
+                </div>
+              </div>
+              <span class="badge-tag status-live" id="chat-engine-tag">ICAR Grounded</span>
+            </div>
+            <div class="panel-body" id="ai-chat-thread" style="flex:1; overflow-y:auto; padding:16px; display:flex; flex-direction:column; gap:12px; background:rgba(0,0,0,0.25); border-radius:12px;">
+              <!-- Chat messages populated via JS -->
+            </div>
+            <div style="padding:12px 0 0 0; border-top:1px solid var(--border-glass); display:flex; gap:10px;">
+              <input type="text" id="ai-chat-input" class="search-input" placeholder="फसल, बीमारी, खाद या मंडी भाव पूछें..." style="flex:1;">
+              <button class="btn-primary" id="btn-send-ai-chat" style="padding:0 20px;">पूछें (Send)</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 10: TELECOM GATEWAY (USSD & SMS) -->
+      <section class="tab-pane" id="pane-telecom-hub">
+        <div class="kpi-grid">
+          <div class="kpi-card glass-card">
+            <div class="kpi-header">
+              <span class="kpi-title">USSD शॉर्ट कोड</span>
+              <span class="kpi-icon">📟</span>
+            </div>
+            <div class="kpi-value text-accent">*123#</div>
+            <div class="kpi-footer text-success">
+              <span>GSM Phase 2+ / 2G Ready</span>
+              <span class="kpi-tag">0 KB Data</span>
+            </div>
+          </div>
+          <div class="kpi-card glass-card">
+            <div class="kpi-header">
+              <span class="kpi-title">SMS गेटवे SLA (Delivery Rate)</span>
+              <span class="kpi-icon">📱</span>
+            </div>
+            <div class="kpi-value" id="telecom-delivery-sla">99.6%</div>
+            <div class="kpi-footer text-info">
+              <span>TRAI DLT-10029 अनुपालन</span>
+              <span class="kpi-tag">Carrier Direct</span>
+            </div>
+          </div>
+          <div class="kpi-card glass-card">
+            <div class="kpi-header">
+              <span class="kpi-title">सक्रिय टेलीकॉम नेटवर्क</span>
+              <span class="kpi-icon">📶</span>
+            </div>
+            <div class="kpi-value text-warning" style="font-size:18px;">Jio, Airtel, BSNL, Vi</div>
+            <div class="kpi-footer text-muted">
+              <span>अखिल भारतीय ग्रामीण कवरेज</span>
+              <span class="kpi-tag">Quad-Band</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="dashboard-grid-2col" style="display:grid; grid-template-columns: 340px 1fr; gap: 20px; margin-top: 20px;">
+          <!-- Left: Retro 2G Nokia Phone USSD Simulator -->
+          <div class="dashboard-panel glass-card">
+            <div class="panel-header">
+              <div class="panel-title-group">
+                <span class="panel-icon">📞</span>
+                <div>
+                  <h2 class="panel-title">2G फोन USSD सिम्युलेटर</h2>
+                  <p class="panel-subtitle">*123# डायल कर लाइव टेलीकॉम मेनू का परीक्षण करें</p>
+                </div>
+              </div>
+            </div>
+            <div class="panel-body" style="display:flex; justify-content:center;">
+              <div class="ussd-phone-body" style="width:300px; background:#161D2B; border:2px solid #2E7D32; border-radius:24px; padding:16px; box-shadow:0 12px 30px rgba(0,0,0,0.6);">
+                <!-- LCD Screen -->
+                <div class="ussd-screen" style="background:#2D3E2E; border:2px solid #4CAF50; border-radius:10px; padding:10px; height:150px; color:#A5D6A7; font-family:'Courier New', monospace; font-size:12px; display:flex; flex-direction:column;">
+                  <div style="display:flex; justify-content:space-between; font-size:10px; border-bottom:1px solid #4CAF50; padding-bottom:4px; margin-bottom:6px;">
+                    <span>BSNL Bharat 2G</span>
+                    <span>📶 4 Bars</span>
+                  </div>
+                  <div id="ussd-screen-content" style="flex:1; overflow-y:auto; line-height:1.3; font-weight:600; white-space:pre-line;">
+                    डायल करें: *123#
+                  </div>
+                  <div id="ussd-input-bar-container" style="display:none; margin-top:4px; gap:4px;">
+                    <input type="text" id="ussd-phone-keypad-input" style="flex:1; background:rgba(0,0,0,0.5); border:1px solid #4CAF50; color:#fff; font-size:12px; padding:2px 6px; border-radius:4px;" placeholder="विकल्प दर्ज करें...">
+                    <button id="btn-ussd-phone-send" style="background:#4CAF50; color:#fff; border:none; padding:2px 8px; border-radius:4px; cursor:pointer; font-weight:bold;">Send</button>
+                  </div>
+                </div>
+
+                <!-- Call Action Buttons -->
+                <div style="display:flex; justify-content:space-between; margin:14px 0 10px 0;">
+                  <button id="btn-ussd-dial" style="background:#2E7D32; color:#fff; border:none; border-radius:50%; width:44px; height:44px; font-size:18px; cursor:pointer; box-shadow:0 4px 10px rgba(46,125,50,0.4);" title="Call / Start USSD">📞</button>
+                  <button id="btn-ussd-back" style="background:#374151; color:#fff; border:none; border-radius:50%; width:44px; height:44px; font-size:16px; cursor:pointer;" title="Backspace">⌫</button>
+                  <button id="btn-ussd-end" style="background:#DC2626; color:#fff; border:none; border-radius:50%; width:44px; height:44px; font-size:18px; cursor:pointer;" title="End Call">🔴</button>
+                </div>
+
+                <!-- Keypad 3x4 Matrix -->
+                <div class="ussd-keypad-matrix" style="display:grid; grid-template-columns: repeat(3, 1fr); gap:8px;">
+                  <button class="phone-key" data-k="1">1</button>
+                  <button class="phone-key" data-k="2">2</button>
+                  <button class="phone-key" data-k="3">3</button>
+                  <button class="phone-key" data-k="4">4</button>
+                  <button class="phone-key" data-k="5">5</button>
+                  <button class="phone-key" data-k="6">6</button>
+                  <button class="phone-key" data-k="7">7</button>
+                  <button class="phone-key" data-k="8">8</button>
+                  <button class="phone-key" data-k="9">9</button>
+                  <button class="phone-key" data-k="*">*</button>
+                  <button class="phone-key" data-k="0">0</button>
+                  <button class="phone-key" data-k="#">#</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Right: SMS Broadcast & Live Telecom Transmission Logs -->
+          <div style="display:flex; flex-direction:column; gap:20px;">
+            <!-- SMS Emergency Broadcast Card -->
+            <div class="dashboard-panel glass-card">
+              <div class="panel-header">
+                <div class="panel-title-group">
+                  <span class="panel-icon">📢</span>
+                  <div>
+                    <h2 class="panel-title">आपातकालीन किसान SMS ब्रॉडकास्ट (Emergency SMS Alert)</h2>
+                    <p class="panel-subtitle">DLT अनुमोदित टेम्प्लेट द्वारा प्रभावित किसानों को तत्काल चेतावनी भेजें</p>
+                  </div>
+                </div>
+              </div>
+              <div class="panel-body">
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px; margin-bottom:12px;">
+                  <div>
+                    <label style="font-size:12px; color:#94A3B8; display:block; margin-bottom:4px;">लक्षित किसान समूह:</label>
+                    <select id="sms-target-group" class="search-input" style="width:100%;">
+                      <option>लखनऊ जिला गेहूं किसान (1,420 किसान)</option>
+                      <option>पीला रतुआ प्रभावित क्षेत्र (340 किसान)</option>
+                      <option>नासिक प्याज उत्पादक (890 किसान)</option>
+                      <option>सभी पंजीकृत किसान (3,250 किसान)</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label style="font-size:12px; color:#94A3B8; display:block; margin-bottom:4px;">DLT टेम्प्लेट आईडी:</label>
+                    <select id="sms-dlt-template" class="search-input" style="width:100%;">
+                      <option value="DLT-WEATHER-101">DLT-WEATHER-101 (भारी बारिश चेतावनी)</option>
+                      <option value="DLT-DISEASE-102">DLT-DISEASE-102 (पीला रतुआ स्प्रे अलर्ट)</option>
+                      <option value="DLT-MANDI-103">DLT-MANDI-103 (मंडी भाव बुलेटिन)</option>
+                    </select>
+                  </div>
+                </div>
+                <div style="margin-bottom:12px;">
+                  <label style="font-size:12px; color:#94A3B8; display:block; margin-bottom:4px;">संदेश सामग्री (SMS Body):</label>
+                  <textarea id="sms-broadcast-message" class="search-input" style="width:100%; height:60px; resize:none;" placeholder="संदेश...">मौसम चेतावनी: अगले 24 घंटे में तेज बारिश व हवा की आशंका। गेहूं में कीटनाशक छिड़काव स्थगित रखें। अधिक जानकारी हेतु डायल करें *123#</textarea>
+                </div>
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                  <span style="font-size:12px; color:#64748B;" id="sms-char-counter">142 वर्ण • 1 सेगमेंट (GSM 7-bit)</span>
+                  <button class="btn-primary" id="btn-broadcast-sms">🚀 SMS ब्रॉडकास्ट भेजें</button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Live Telecom Logs Table -->
+            <div class="dashboard-panel glass-card" style="flex:1;">
+              <div class="panel-header">
+                <div class="panel-title-group">
+                  <span class="panel-icon">📋</span>
+                  <div>
+                    <h2 class="panel-title">लाइव टेलीकॉम ट्रांसमिशन एवं कैरियर लॉग्स</h2>
+                    <p class="panel-subtitle">Jio, Airtel, BSNL, Vi नेटवर्क पर प्रसारित संदेशों की वास्तविक स्थिति</p>
+                  </div>
+                </div>
+                <button class="btn-preset" id="btn-refresh-telecom-logs">🔄 रीफ्रेश लॉग्स</button>
+              </div>
+              <div class="panel-body" style="overflow-x:auto;">
+                <table class="data-table" style="width:100%; font-size:12px;" id="telecom-logs-table">
+                  <thead>
+                    <tr>
+                      <th>मैसेज ID</th>
+                      <th>मोबाइल नंबर</th>
+                      <th>संदेश / कीवर्ड</th>
+                      <th>कैरियर नेटवर्क</th>
+                      <th>स्थिति</th>
+                      <th>लेटेंसी</th>
+                      <th>समय</th>
+                    </tr>
+                  </thead>
+                  <tbody id="telecom-logs-tbody">
+                    <!-- Populated via JS -->
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <!-- Toast Notification Stack -->
+  <div id="toast-container" class="toast-container"></div>
+
+  <!-- Leaflet JS -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+  <script type="module" src="./app.js"></script>
+</body>
+</html>
