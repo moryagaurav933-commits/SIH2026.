@@ -155,3 +155,5 @@ def scan_repository():
 if __name__ == '__main__':
     success = scan_repository()
     sys.exit(0 if success else 1)
+
+# Agri-Saarthi 2026 Sync

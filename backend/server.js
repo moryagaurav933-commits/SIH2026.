@@ -584,3 +584,5 @@ app.listen(PORT, () => {
     console.log(`🛡️ Rate Limiting: 60 req/min per IP`);
     console.log(`=======================================================`);
 });
+
+// Agri-Saarthi 2026 Sync

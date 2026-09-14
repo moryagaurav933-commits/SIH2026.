@@ -163,3 +163,5 @@ Ensure it exits with `✅ SUCCESS: 0 secrets or sensitive file leaks detected!`
    ```bash
    git push origin feature/your-feature-name
    ```
+
+<!-- Agri-Saarthi 2026 Sync -->

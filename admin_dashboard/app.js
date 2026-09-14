@@ -2776,3 +2776,5 @@ window.handleStateClick = handleStateClick;
 window.replayVoiceResponse = replayVoiceResponse;
 window.FarmerAvatar = FarmerAvatar;
 window.VoiceManager = VoiceManager;
+
+// Agri-Saarthi 2026 Sync

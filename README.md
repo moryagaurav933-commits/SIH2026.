@@ -52,3 +52,5 @@ npm install
 npm run dev
 ```
 *Frontend runs on `http://localhost:5173`*
+
+<!-- Agri-Saarthi 2026 Sync -->

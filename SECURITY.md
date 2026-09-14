@@ -66,3 +66,5 @@ If you identify a potential security vulnerability or credential leak:
 2. Report the vulnerability privately to the project lead or security contact at: `moryagaurav933@gmail.com`
 3. Include details of the vulnerability, steps to reproduce, and potential impact.
 4. We aim to acknowledge reports within 24 hours and provide remediation within 72 hours.
+
+<!-- Agri-Saarthi 2026 Sync -->
