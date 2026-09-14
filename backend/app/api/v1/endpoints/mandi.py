@@ -34,9 +34,6 @@ async def get_mandi_prices(
     result = await db.execute(query)
     prices = result.scalars().all()
 
-    if not prices:
-        return _demo_prices(district_code or "UP001")
-
     return [MandiPriceResponse.model_validate(p) for p in prices]
 
 
@@ -68,35 +65,3 @@ async def get_price_trends(
         ],
     }
 
-
-def _demo_prices(district_code: str) -> List[MandiPriceResponse]:
-    """Generate demo mandi prices for display."""
-    import uuid
-    from datetime import datetime, timezone
-
-    demo_data = [
-        ("Wheat", "गेहूं", 2450, "up", 3.2),
-        ("Rice", "चावल", 3100, "stable", 0.5),
-        ("Maize", "मक्का", 1950, "down", -2.1),
-        ("Tomato", "टमाटर", 1800, "up", 8.5),
-        ("Onion", "प्याज", 2200, "up", 5.3),
-        ("Potato", "आलू", 1200, "stable", 0.2),
-        ("Soybean", "सोयाबीन", 4500, "down", -1.8),
-        ("Cotton", "कपास", 6200, "up", 2.7),
-    ]
-    return [
-        MandiPriceResponse(
-            id=uuid.uuid4(),
-            market_name=f"Krishi Mandi {district_code}",
-            crop_name=name,
-            crop_name_hi=name_hi,
-            price_per_quintal=price,
-            min_price=price * 0.9,
-            max_price=price * 1.1,
-            price_trend=trend,
-            price_change_pct=change,
-            price_date=date.today(),
-            source="demo",
-        )
-        for name, name_hi, price, trend, change in demo_data
-    ]
