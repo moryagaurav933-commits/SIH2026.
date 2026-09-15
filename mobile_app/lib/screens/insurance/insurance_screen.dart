@@ -26,31 +26,8 @@ class _InsuranceScreenState extends State<InsuranceScreen> with SingleTickerProv
   Map<String, dynamic>? _lastClaim;
   late AnimationController _blinkController;
 
-  final List<Map<String, dynamic>> _claimsHistory = [
-    {
-      'claim_id': 'PMFBY-UP-2026-981245',
-      'policy_number': 'PMFBY-UP-2026-981245',
-      'claim_type': 'ओलावृष्टि (Hailstorm Damage)',
-      'crop_name': 'गेहूं (Wheat)',
-      'status': 'स्वीकृत (Approved)',
-      'amount': '₹42,500',
-      'date': '02 मार्च 2026',
-      'sha256_hash': '7d9e0f1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3e4f5a6b7c8d9e',
-      'status_color': Colors.greenAccent,
-    },
-    {
-      'claim_id': 'PMFBY-UP-2025-441209',
-      'policy_number': 'PMFBY-UP-2025-441209',
-      'claim_type': 'कीट प्रकोप (Pest Attack)',
-      'crop_name': 'सरसों (Mustard)',
-      'status': 'निपटारा पूर्ण (Settled)',
-      'amount': '₹28,000',
-      'date': '14 नवंबर 2025',
-      'sha256_hash': '3c2a1b9e8d7f6a5b4c3d2e1f0a9b8c7d6e5f4a3b2c1d0e9f8a7b6c5d4e3f2a1b',
-      'status_color': Colors.blueAccent,
-    },
-  ];
-
+  final List<Map<String, dynamic>> _claimsHistory = [];
+  
   @override
   void initState() {
     super.initState();
@@ -58,6 +35,16 @@ class _InsuranceScreenState extends State<InsuranceScreen> with SingleTickerProv
       vsync: this,
       duration: const Duration(milliseconds: 700),
     )..repeat(reverse: true);
+    _loadClaims();
+  }
+
+  Future<void> _loadClaims() async {
+    final claims = await _recorder.loadSavedClaims();
+    if (mounted) {
+      setState(() {
+        _claimsHistory.addAll(claims);
+      });
+    }
   }
 
   @override
@@ -66,48 +53,33 @@ class _InsuranceScreenState extends State<InsuranceScreen> with SingleTickerProv
     super.dispose();
   }
 
-  /// Capture crop damage evidence via LIVE CAMERA ONLY (strictly no gallery).
-  Future<void> _captureLiveCamera({required bool isVideo}) async {
+  /// Capture crop damage evidence via LIVE VIDEO ONLY (strictly no gallery).
+  Future<void> _captureLiveCamera() async {
     setState(() => _isProcessing = true);
     try {
-      XFile? mediaFile;
-      if (isVideo) {
-        // Live camera video capture only
-        mediaFile = await _picker.pickVideo(
-          source: ImageSource.camera,
-          maxDuration: const Duration(seconds: 30),
-        );
-      } else {
-        // Live camera photo capture only
-        mediaFile = await _picker.pickImage(
-          source: ImageSource.camera,
-          imageQuality: 90,
-        );
-      }
+      // Live camera video capture only, max 30 seconds to prevent massive file sizes
+      final XFile? mediaFile = await _picker.pickVideo(
+        source: ImageSource.camera,
+        maxDuration: const Duration(seconds: 30),
+      );
 
       if (mediaFile == null) {
         setState(() => _isProcessing = false);
         return;
       }
 
-      final Uint8List bytes = await mediaFile.readAsBytes();
-      final evidence = _recorder.secureEvidenceMedia(
-        mediaPath: mediaFile.path,
-        mediaBytes: bytes,
-        claimType: isVideo ? 'फसल क्षति वीडियो (Crop Damage Video)' : 'फसल क्षति फोटो (Crop Damage Photo)',
+      // Secure and save video permanently via recorder service
+      final evidence = await _recorder.secureAndSaveVideo(
+        videoFile: File(mediaFile.path),
+        claimType: 'फसल क्षति वीडियो (Crop Damage Video)',
         cropName: 'गेहूं (Wheat)',
       );
 
       _onEvidenceSecured(evidence);
     } catch (e) {
       // Fallback for emulator / desktop environments where live camera hardware is unavailable
-      final mockBytes = Uint8List.fromList(
-        List<int>.generate(2048, (i) => (i * 17 + DateTime.now().microsecond) % 256),
-      );
-      final evidence = _recorder.secureEvidenceMedia(
-        mediaPath: '/camera/live_${DateTime.now().millisecondsSinceEpoch}.${isVideo ? "mp4" : "jpg"}',
-        mediaBytes: mockBytes,
-        claimType: isVideo ? 'लाइव कैमरा वीडियो (Live Camera Video)' : 'लाइव कैमरा फोटो (Live Camera Photo)',
+      final evidence = await _recorder.createMockSecuredVideo(
+        claimType: 'लाइव कैमरा वीडियो (Live Camera Video)',
         cropName: 'गेहूं (Wheat)',
       );
       _onEvidenceSecured(evidence);
@@ -169,23 +141,38 @@ class _InsuranceScreenState extends State<InsuranceScreen> with SingleTickerProv
   }
 
   /// Verify evidence against stored SHA-256 hash.
-  void _verifyEvidence(Map<String, dynamic> claim, {bool simulateTamper = false}) {
-    List<int>? bytes = claim['media_bytes'] as List<int>?;
-    if (bytes == null || bytes.isEmpty) {
-      bytes = Uint8List.fromList((claim['sha256_hash'] ?? 'demo_evidence').toString().codeUnits);
+  Future<void> _verifyEvidence(Map<String, dynamic> claim, {bool simulateTamper = false}) async {
+    // Show loading indicator
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => const Center(child: CircularProgressIndicator(color: Colors.greenAccent)),
+    );
+
+    final String? path = claim['media_path'];
+    File? fileToVerify;
+    if (path != null) {
+      final file = File(path);
+      if (await file.exists()) fileToVerify = file;
     }
 
-    // If simulating tamper, corrupt the first byte to trigger mismatch
-    if (simulateTamper) {
-      bytes = List<int>.from(bytes);
-      bytes[0] = (bytes[0] ^ 0xFF);
+    List<int>? fallbackBytes = claim['media_bytes'] as List<int>?;
+    if (fileToVerify == null && (fallbackBytes == null || fallbackBytes.isEmpty)) {
+      fallbackBytes = Uint8List.fromList((claim['sha256_hash'] ?? 'demo_evidence').toString().codeUnits);
     }
 
     final storedHash = claim['sha256_hash'] ?? claim['video_sha256'] ?? '';
-    final result = _recorder.verifyEvidence(
-      currentBytes: bytes,
+    
+    // Call the new async verify method which uses memory-safe streaming if file exists
+    final result = await _recorder.verifyEvidence(
+      file: fileToVerify,
+      fallbackBytes: fallbackBytes,
       storedHash: storedHash,
+      simulateTamper: simulateTamper,
     );
+
+    // Dismiss loading indicator
+    if (mounted) Navigator.pop(context);
 
     final bool isValid = result['is_valid'] == true;
     final String statusText = isValid ? 'Verified / Evidence not modified' : 'Tampered / Evidence modified';
@@ -489,36 +476,19 @@ class _InsuranceScreenState extends State<InsuranceScreen> with SingleTickerProv
             ],
           ),
           const SizedBox(height: 10),
-          Row(
-            children: [
-              Expanded(
-                child: ElevatedButton.icon(
-                  icon: const Icon(Icons.videocam, size: 18),
-                  label: const Text('कैमरा वीडियो (Video)', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF1976D2),
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 10),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                  ),
-                  onPressed: _isProcessing ? null : () => _captureLiveCamera(isVideo: true),
-                ),
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton.icon(
+              icon: const Icon(Icons.videocam, size: 18),
+              label: const Text('लाइव वीडियो रिकॉर्ड करें (Record Live Video)', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF1976D2),
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(vertical: 14),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
               ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: ElevatedButton.icon(
-                  icon: const Icon(Icons.photo_camera, size: 18),
-                  label: const Text('कैमरा फोटो (Photo)', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF00796B),
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 10),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                  ),
-                  onPressed: _isProcessing ? null : () => _captureLiveCamera(isVideo: false),
-                ),
-              ),
-            ],
+              onPressed: _isProcessing ? null : () => _captureLiveCamera(),
+            ),
           ),
         ],
       ),

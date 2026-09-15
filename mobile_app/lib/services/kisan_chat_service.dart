@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'mesh_service.dart';
+import 'llm_service.dart';
 
 /// Kisan Chat — offline farmer-to-farmer chat carried over the P2P mesh.
 ///
@@ -181,7 +182,11 @@ class KisanChatService {
     String text, {
     String communityId = defaultCommunityId,
   }) async {
+    // Sanitize and limit input length to prevent DoS and memory exhaustion
+    if (text.length > 1000) text = text.substring(0, 1000);
     final clean = text.trim();
+    if (clean.isEmpty) throw Exception("Message cannot be empty");
+
     final msg = ChatMessage(
       id: DateTime.now().microsecondsSinceEpoch.toString(),
       communityId: communityId,
@@ -221,6 +226,10 @@ class KisanChatService {
     required String text,
     String communityId = defaultCommunityId,
   }) async {
+    // Sanitize incoming mesh payloads
+    if (text.length > 1000) text = text.substring(0, 1000);
+    if (senderName.length > 50) senderName = senderName.substring(0, 50);
+
     final msg = ChatMessage(
       id: DateTime.now().microsecondsSinceEpoch.toString(),
       communityId: communityId,
@@ -235,18 +244,24 @@ class KisanChatService {
     return msg;
   }
 
-  /// Demo helper: generate a contextual reply from a nearby farmer so the
-  /// two-way discussion is visible on a single device. On real hardware this
-  /// same message would arrive from a peer over the mesh instead.
   Future<ChatMessage> simulatePeerReply(
     String toText, {
     String communityId = defaultCommunityId,
   }) async {
     final peer = _peers[DateTime.now().second % _peers.length];
+    
+    // Call the AI LLM Service for a dynamic, context-aware reply
+    String dynamicReply;
+    try {
+      dynamicReply = await LLMService().answerQuestion(toText, 'hi');
+    } catch (_) {
+      dynamicReply = _replyFor(toText);
+    }
+
     return receiveMessage(
       senderId: peer[0],
       senderName: peer[1],
-      text: _replyFor(toText),
+      text: dynamicReply,
       communityId: communityId,
     );
   }
@@ -269,6 +284,11 @@ class KisanChatService {
 
   Future<void> _persist() async {
     try {
+      // Prevent unbounded growth which causes UI jank and memory/storage exhaustion
+      if (_messages.length > 500) {
+        _messages.removeRange(0, _messages.length - 500);
+      }
+      
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString(
         _storageKey,

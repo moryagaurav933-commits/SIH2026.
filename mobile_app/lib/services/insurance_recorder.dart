@@ -1,53 +1,140 @@
 import 'dart:async';
+import 'dart:convert';
+import 'dart:io';
+import 'dart:typed_data';
+import 'package:path_provider/path_provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'crypto_service.dart';
 
 /// Insurance Evidence Locker service.
-/// Records tamper-evident video/photo with GPS, timestamp, and genuine SHA-256 hash.
+/// Records tamper-evident video with GPS, timestamp, and genuine SHA-256 hash.
 class InsuranceRecorder {
   final CryptoService _cryptoService = CryptoService();
   bool _isRecording = false;
   DateTime? _recordingStartTime;
   final List<Map<String, dynamic>> _sensorReadings = [];
+  
+  static const String _storageKey = 'insurance_claims_history_v1';
 
-  /// Create a tamper-evident evidence package from captured camera media.
-  Map<String, dynamic> secureEvidenceMedia({
-    required String mediaPath,
-    required List<int> mediaBytes,
+  /// Securely hash and permanently save the live camera video file.
+  Future<Map<String, dynamic>> secureAndSaveVideo({
+    required File videoFile,
     required String claimType,
     String? cropName,
     String? policyNumber,
     double? gpsLat,
     double? gpsLon,
-  }) {
-    final captureTimestamp = DateTime.now().toIso8601String();
-    final sha256Hash = _cryptoService.computeSha256(mediaBytes);
-    final claimId = 'PMFBY-UP-${DateTime.now().year}-${DateTime.now().millisecondsSinceEpoch.toString().substring(5)}';
-    final mediaName = mediaPath.split(RegExp(r'[\\/]')).last;
-
-    return {
+  }) async {
+    // 1. Move video to permanent secure app storage
+    final Directory appDir = await getApplicationDocumentsDirectory();
+    final String timestamp = DateTime.now().millisecondsSinceEpoch.toString();
+    final String securePath = '${appDir.path}/evidence_$timestamp.mp4';
+    final File savedFile = await videoFile.copy(securePath);
+    
+    // 2. Compute SHA-256 hash using chunked stream (prevents OOM on large videos)
+    final String sha256Hash = await _cryptoService.computeFileSha256(savedFile);
+    
+    final claimId = 'PMFBY-UP-${DateTime.now().year}-${timestamp.substring(5)}';
+    
+    final evidence = {
       'claim_id': claimId,
-      'media_path': mediaPath,
-      'media_name': mediaName,
+      'media_path': securePath,
+      'media_name': 'evidence_$timestamp.mp4',
       'sha256_hash': sha256Hash,
-      'video_sha256': sha256Hash, // backward compatibility
-      'capture_timestamp': captureTimestamp,
+      'video_sha256': sha256Hash,
+      'capture_timestamp': DateTime.now().toIso8601String(),
       'claim_type': claimType,
       'crop_name': cropName ?? 'गेहूं (Wheat)',
       'policy_number': policyNumber ?? claimId,
       'status': 'Evidence Secured',
-      'file_size_bytes': mediaBytes.length,
+      'file_size_bytes': await savedFile.length(),
       'gps_lat': gpsLat ?? 26.8467,
       'gps_lon': gpsLon ?? 80.9462,
-      'media_bytes': mediaBytes,
     };
+    
+    await _saveClaimToHistory(evidence);
+    return evidence;
   }
 
-  /// Verify evidence media against stored SHA-256 hash.
-  Map<String, dynamic> verifyEvidence({
-    required List<int> currentBytes,
+  /// Create a mock secured video for emulator testing.
+  Future<Map<String, dynamic>> createMockSecuredVideo({
+    required String claimType,
+    String? cropName,
+  }) async {
+    final timestamp = DateTime.now().millisecondsSinceEpoch.toString();
+    final dummyData = 'mock_video_bytes_$timestamp';
+    final sha256Hash = _cryptoService.computeStringSha256(dummyData);
+    final claimId = 'PMFBY-UP-${DateTime.now().year}-${timestamp.substring(5)}';
+    
+    final evidence = {
+      'claim_id': claimId,
+      'media_path': '/mock/evidence_$timestamp.mp4',
+      'media_name': 'evidence_$timestamp.mp4',
+      'sha256_hash': sha256Hash,
+      'video_sha256': sha256Hash,
+      'capture_timestamp': DateTime.now().toIso8601String(),
+      'claim_type': claimType,
+      'crop_name': cropName ?? 'गेहूं (Wheat)',
+      'policy_number': claimId,
+      'status': 'Evidence Secured',
+      'file_size_bytes': 2048,
+      'gps_lat': 26.8467,
+      'gps_lon': 80.9462,
+    };
+    
+    await _saveClaimToHistory(evidence);
+    return evidence;
+  }
+
+  /// Persist claim history to SharedPreferences forever.
+  Future<void> _saveClaimToHistory(Map<String, dynamic> evidence) async {
+    try {
+      final claims = await loadSavedClaims();
+      claims.insert(0, evidence); // Add newest first
+      
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString(_storageKey, jsonEncode(claims));
+    } catch (_) {}
+  }
+
+  /// Load permanently saved claims.
+  Future<List<Map<String, dynamic>>> loadSavedClaims() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final String? data = prefs.getString(_storageKey);
+      if (data != null && data.isNotEmpty) {
+        final List<dynamic> decoded = jsonDecode(data);
+        return decoded.map((e) => Map<String, dynamic>.from(e)).toList();
+      }
+    } catch (_) {}
+    return [];
+  }
+
+  /// Verify evidence media against stored SHA-256 hash using memory-safe streams if available.
+  Future<Map<String, dynamic>> verifyEvidence({
+    File? file,
+    List<int>? fallbackBytes,
     required String storedHash,
-  }) {
-    final computedHash = _cryptoService.computeSha256(currentBytes);
+    bool simulateTamper = false,
+  }) async {
+    String computedHash;
+    
+    if (file != null && await file.exists()) {
+      computedHash = await _cryptoService.computeFileSha256(file);
+      if (simulateTamper) {
+        // Alter hash to simulate file modification
+        computedHash = computedHash.substring(0, 63) + (computedHash.endsWith('a') ? 'b' : 'a');
+      }
+    } else if (fallbackBytes != null && fallbackBytes.isNotEmpty) {
+      if (simulateTamper) {
+        fallbackBytes = List<int>.from(fallbackBytes);
+        fallbackBytes[0] = fallbackBytes[0] ^ 0xFF; // Flip byte
+      }
+      computedHash = _cryptoService.computeSha256(fallbackBytes);
+    } else {
+      computedHash = "";
+    }
+
     final isValid = computedHash.toLowerCase() == storedHash.trim().toLowerCase();
 
     return {

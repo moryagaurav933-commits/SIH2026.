@@ -16,10 +16,11 @@ class CryptoService {
     return dart_crypto.sha256.convert(utf8.encode(data)).toString();
   }
 
-  /// Compute SHA-256 hash of a local file.
+  /// Compute SHA-256 hash of a local file efficiently using streams.
   Future<String> computeFileSha256(File file) async {
-    final bytes = await file.readAsBytes();
-    return computeSha256(bytes);
+    final stream = file.openRead();
+    final hash = await dart_crypto.sha256.bind(stream).first;
+    return hash.toString();
   }
 
   /// Verify evidence media bytes against an expected SHA-256 hash.
