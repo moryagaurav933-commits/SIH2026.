@@ -196,47 +196,36 @@ class AIService:
                     {"role": "user", "parts": [{"text": system_prompt + "\n\nकिसान का सवाल: " + message}]}
                 ]
 
-                CANDIDATE_MODELS = ["gemini-3.6-flash", "gemini-3.1-flash-lite", "gemini-flash-latest", "gemini-3.7-flash"]
-                reply_text = None
-                used_model = None
+                # Gemini 2.5 Flash for state-of-the-art agricultural reasoning
+                url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={api_key}"
+                payload = {
+                    "contents": contents,
+                    "generationConfig": {
+                        "temperature": 0.3,
+                        "maxOutputTokens": 800,
+                        "topP": 0.85
+                    }
+                }
 
-                for model_name in CANDIDATE_MODELS:
-                    url = f"https://generativelanguage.googleapis.com/v1beta/models/{model_name}:generateContent?key={api_key}"
-                    payload = {
-                        "contents": contents,
-                        "generationConfig": {
-                            "temperature": 0.4,
-                            "maxOutputTokens": 1024,
-                            "topP": 0.85
+                async with httpx.AsyncClient(timeout=20.0) as client:
+                    resp = await client.post(url, json=payload)
+                    if resp.status_code == 200:
+                        data = resp.json()
+                        reply_text = data["candidates"][0]["content"]["parts"][0]["text"]
+                        result = {
+                            "success": True,
+                            "source": "gemini_live",
+                            "model": "gemini-2.5-flash",
+                            "reply": reply_text,
+                            "language": language,
+                            "offline_fallback": False,
+                            "requests_remaining": remaining,
+                            "reset_in_seconds": reset_in
                         }
-                    }
-
-                    try:
-                        async with httpx.AsyncClient(timeout=20.0) as client:
-                            resp = await client.post(url, json=payload)
-                            if resp.status_code == 200:
-                                data = resp.json()
-                                reply_text = data["candidates"][0]["content"]["parts"][0]["text"]
-                                used_model = model_name
-                                break
-                            else:
-                                logger.warning(f"Model {model_name} returned status {resp.status_code}: {resp.text}")
-                    except Exception as mod_err:
-                        logger.warning(f"Model {model_name} error: {mod_err}")
-
-                if reply_text:
-                    result = {
-                        "success": True,
-                        "source": "gemini_live",
-                        "model": used_model,
-                        "reply": reply_text,
-                        "language": language,
-                        "offline_fallback": False,
-                        "requests_remaining": remaining,
-                        "reset_in_seconds": reset_in
-                    }
-                    gemini_limiter.store_cache(cache_key, result)
-                    return result
+                        gemini_limiter.store_cache(cache_key, result)
+                        return result
+                    else:
+                        logger.warning(f"Gemini API returned status {resp.status_code}: {resp.text}")
             except Exception as e:
                 logger.error(f"Error calling Gemini API: {e}", exc_info=True)
 

@@ -6,6 +6,7 @@ import os, sys
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
 
+from app.config import settings
 from app.db.base import Base
 from app.models import models  # noqa: F401
 
@@ -17,10 +18,7 @@ if config.config_file_name is not None:
 target_metadata = Base.metadata
 
 def get_url():
-    return os.environ.get(
-        "DATABASE_URL_SYNC",
-        "postgresql+psycopg2://krishi_admin:krishi_secure_2026@localhost:5432/krishi_saarthi_master"
-    )
+    return os.environ.get("DATABASE_URL_SYNC", settings.DATABASE_URL_SYNC)
 
 def run_migrations_offline():
     url = get_url()

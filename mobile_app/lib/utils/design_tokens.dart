@@ -153,6 +153,7 @@ PreferredSizeWidget buildKrishiAppBar({
   required String emoji,
   Color backgroundColor = colorBg,
   List<Widget>? actions,
+  VoidCallback? onBack,
 }) {
   return PreferredSize(
     preferredSize: const Size.fromHeight(64),
@@ -168,7 +169,7 @@ PreferredSizeWidget buildKrishiAppBar({
           child: Row(
             children: [
               InkWell(
-                onTap: () => Navigator.of(context).pop(),
+                onTap: onBack ?? () => Navigator.of(context).pop(),
                 borderRadius: BorderRadius.circular(radiusFull),
                 child: Container(
                   width: 36,

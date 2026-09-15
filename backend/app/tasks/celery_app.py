@@ -3,11 +3,12 @@ Celery application configuration for async tasks.
 """
 from celery import Celery
 from celery.schedules import crontab
+from app.config import settings
 
 celery_app = Celery(
     "krishi_saarthi",
-    broker="redis://localhost:6379/1",
-    backend="redis://localhost:6379/2",
+    broker=settings.CELERY_BROKER_URL,
+    backend=settings.CELERY_RESULT_BACKEND,
     include=[
         "app.tasks.weather_tasks",
         "app.tasks.mandi_tasks",

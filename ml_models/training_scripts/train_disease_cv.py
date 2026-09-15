@@ -173,5 +173,3 @@ if __name__ == "__main__":
     metadata_path = os.path.join(args.export_dir, "crop_diseases_icar.json")
     export_disease_metadata(metadata_path)
     print("[*] MobileNetV3 INT8 training pipeline configured for ICAR disease benchmark.")
-
-# Agri-Saarthi 2026 Sync

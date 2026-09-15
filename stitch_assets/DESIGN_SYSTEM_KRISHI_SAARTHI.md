@@ -30,5 +30,3 @@ Engineered for Indian agrarian ecosystems. Operating at the intersection of GovT
 - Body Medium: Noto Sans, 14px, 400 weight (Line height: 20px)
 - Vernacular Paired: Noto Sans Devanagari, 13px/14px, 600 weight
 - Data / Telemetry Mono: JetBrains Mono, 12px, 500 weight
-
-<!-- Agri-Saarthi 2026 Sync -->

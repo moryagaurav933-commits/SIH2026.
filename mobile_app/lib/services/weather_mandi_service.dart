@@ -4,6 +4,10 @@ import '../db/local_db.dart';
 
 /// Weather service for local caching and display.
 class WeatherService {
+  static const _apiBaseUrl = String.fromEnvironment(
+    'API_BASE_URL',
+    defaultValue: 'http://10.0.2.2:8000',
+  );
   final LocalDB _db;
   
   WeatherService(this._db);
@@ -25,7 +29,9 @@ class WeatherService {
 
     // 2. Fetch from backend API
     try {
-      final response = await http.get(Uri.parse('http://127.0.0.1:8000/api/v1/weather/forecast?district_code=$districtCode'));
+      final response = await http.get(Uri.parse(
+        '$_apiBaseUrl/api/v1/weather/forecast?district_code=${Uri.encodeQueryComponent(districtCode)}',
+      ));
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         final forecast = data['forecast_data'] as Map<String, dynamic>;

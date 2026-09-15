@@ -1,11 +1,64 @@
 import 'dart:async';
+import 'crypto_service.dart';
 
 /// Insurance Evidence Locker service.
-/// Records tamper-proof video with GPS, timestamp, and sensor metadata.
+/// Records tamper-evident video/photo with GPS, timestamp, and genuine SHA-256 hash.
 class InsuranceRecorder {
+  final CryptoService _cryptoService = CryptoService();
   bool _isRecording = false;
   DateTime? _recordingStartTime;
   final List<Map<String, dynamic>> _sensorReadings = [];
+
+  /// Create a tamper-evident evidence package from captured camera media.
+  Map<String, dynamic> secureEvidenceMedia({
+    required String mediaPath,
+    required List<int> mediaBytes,
+    required String claimType,
+    String? cropName,
+    String? policyNumber,
+    double? gpsLat,
+    double? gpsLon,
+  }) {
+    final captureTimestamp = DateTime.now().toIso8601String();
+    final sha256Hash = _cryptoService.computeSha256(mediaBytes);
+    final claimId = 'PMFBY-UP-${DateTime.now().year}-${DateTime.now().millisecondsSinceEpoch.toString().substring(5)}';
+    final mediaName = mediaPath.split(RegExp(r'[\\/]')).last;
+
+    return {
+      'claim_id': claimId,
+      'media_path': mediaPath,
+      'media_name': mediaName,
+      'sha256_hash': sha256Hash,
+      'video_sha256': sha256Hash, // backward compatibility
+      'capture_timestamp': captureTimestamp,
+      'claim_type': claimType,
+      'crop_name': cropName ?? 'गेहूं (Wheat)',
+      'policy_number': policyNumber ?? claimId,
+      'status': 'Evidence Secured',
+      'file_size_bytes': mediaBytes.length,
+      'gps_lat': gpsLat ?? 26.8467,
+      'gps_lon': gpsLon ?? 80.9462,
+      'media_bytes': mediaBytes,
+    };
+  }
+
+  /// Verify evidence media against stored SHA-256 hash.
+  Map<String, dynamic> verifyEvidence({
+    required List<int> currentBytes,
+    required String storedHash,
+  }) {
+    final computedHash = _cryptoService.computeSha256(currentBytes);
+    final isValid = computedHash.toLowerCase() == storedHash.trim().toLowerCase();
+
+    return {
+      'is_valid': isValid,
+      'status': isValid ? 'verified' : 'tampered',
+      'message': isValid ? 'Verified / Evidence not modified' : 'Tampered / Evidence modified',
+      'stored_hash': storedHash,
+      'computed_hash': computedHash,
+      'verified_at': DateTime.now().toIso8601String(),
+    };
+  }
 
   /// Start recording evidence video with metadata injection.
   Future<void> startRecording({
@@ -20,9 +73,6 @@ class InsuranceRecorder {
     _recordingStartTime = DateTime.now();
     _sensorReadings.clear();
 
-    // In production: start camera recording with metadata overlay
-    // camera.startVideoRecording();
-
     // Start collecting sensor data at 1Hz
     _startSensorCollection(gpsLat, gpsLon);
   }
@@ -30,17 +80,28 @@ class InsuranceRecorder {
   /// Synchronous evidence finalization helper for instant local claims and UI demos.
   Map<String, dynamic> finalizeEvidence({required int seconds}) {
     _isRecording = false;
+    final dummyData = 'krishi_saarthi_evidence_${DateTime.now().millisecondsSinceEpoch}_${seconds}s';
+    final computedHash = _cryptoService.computeStringSha256(dummyData);
+    final claimId = 'PMFBY-UP-${DateTime.now().year}-${DateTime.now().millisecondsSinceEpoch.toString().substring(5)}';
+
     return {
+      'claim_id': claimId,
       'duration_seconds': seconds,
-      'video_sha256': '9e32a4e0cb8f1a2c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2c3d4e5f6a7b8c',
-      'blockchain_tx_id': '0x7f9a8b1c2d3e4f5a6b7c8d9e0f1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a',
-      'device_signature': 'ECDSA-SECP256R1-SIG-VALID',
+      'sha256_hash': computedHash,
+      'video_sha256': computedHash,
+      'media_path': '/local/storage/evidence_${DateTime.now().millisecondsSinceEpoch}.mp4',
+      'media_name': 'evidence_${DateTime.now().millisecondsSinceEpoch}.mp4',
+      'capture_timestamp': DateTime.now().toIso8601String(),
+      'crop_name': 'गेहूं (Wheat)',
+      'claim_type': 'ओलावृष्टि (Hailstorm Damage)',
+      'policy_number': claimId,
       'gps_lat': 26.8467,
       'gps_lon': 80.9462,
       'sensor_tamper_free': true,
-      'status': 'SECURED_ON_CHAIN',
+      'status': 'Evidence Secured',
     };
   }
+
 
   /// Stop recording and return evidence package.
   Future<EvidencePackage> stopRecording() async {
@@ -98,12 +159,7 @@ class InsuranceRecorder {
   }
 
   String _generateHash(String data) {
-    var hash = 0;
-    for (var i = 0; i < data.length; i++) {
-      hash = ((hash << 5) - hash) + data.codeUnitAt(i);
-      hash = hash & 0xFFFFFFFF;
-    }
-    return hash.toRadixString(16).padLeft(64, '0');
+    return _cryptoService.computeStringSha256(data);
   }
 
   String _signMetadata(EvidenceMetadata metadata) {

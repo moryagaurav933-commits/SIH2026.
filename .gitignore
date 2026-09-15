@@ -110,6 +110,10 @@ dist/
 *-journal
 database/backups/*.sql
 
+# Uploaded user evidence is runtime data and must not be committed.
+uploads/
+**/uploads/
+
 # ──────────────────────────────────────────────────────────────────────────────
 # 6. LARGE ML MODEL WEIGHTS (Exceeds GitHub 100MB File Limit)
 # ──────────────────────────────────────────────────────────────────────────────
@@ -150,5 +154,3 @@ Desktop.ini
 *~
 *.log
 docker-compose.override.yml
-
-<!-- Agri-Saarthi 2026 Sync -->

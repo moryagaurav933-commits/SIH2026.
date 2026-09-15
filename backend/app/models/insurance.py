@@ -16,12 +16,13 @@ class InsuranceClaim(Base):
     farmer_id = Column(UUID(as_uuid=True), ForeignKey("farmers.id", ondelete="CASCADE"), nullable=False, index=True)
     policy_number = Column(String(50), nullable=True, index=True)
     claim_type = Column(String(30), nullable=False)  # crop_damage, flood, drought, pest_attack, hailstorm
+    crop_name = Column(String(50), nullable=True)
 
-    # Evidence
+    # Evidence (tamper-evident SHA-256)
     evidence_video_hash = Column(String(64), nullable=False)
     evidence_video_url = Column(Text, nullable=True)
     evidence_photos = Column(JSON, nullable=True)  # Array of photo URLs
-    metadata_signature = Column(Text, nullable=False)
+    metadata_signature = Column(Text, nullable=True, default="")
     device_metadata = Column(JSON, nullable=True)  # GPS, gyro, timestamp, device info
 
     # Blockchain anchor

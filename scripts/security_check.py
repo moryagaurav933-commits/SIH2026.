@@ -18,10 +18,16 @@ import re
 import sys
 import subprocess
 
+try:
+    # Avoid UnicodeEncodeError from emoji/status text in legacy Windows shells.
+    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+except (AttributeError, OSError):
+    pass
+
 # Directories to skip when scanning files
 IGNORED_DIRS = {
     '.git', 'node_modules', '.dart_tool', '__pycache__', 'venv', 
-    '.venv', '.agents', '.vite', 'dist', 'build'
+    '.venv', '.venv313', '.agents', '.vite', 'dist', 'build'
 }
 
 # Suspicious file patterns that must NEVER be committed
@@ -72,8 +78,21 @@ def check_git_staged_files():
     return []
 
 
+def is_git_repository():
+    """Return whether the scanner is running inside a Git work tree."""
+    try:
+        return subprocess.run(
+            ["git", "rev-parse", "--is-inside-work-tree"],
+            capture_output=True,
+            text=True,
+        ).returncode == 0
+    except OSError:
+        return False
+
+
 def scan_repository():
     violations = []
+    git_repository = is_git_repository()
     print("=" * 70)
     print("🌾 Krishi-Saarthi Pre-Commit Security & Privacy Audit")
     print("=" * 70)
@@ -98,22 +117,27 @@ def scan_repository():
             relpath = filepath.lstrip('./')
 
             # Check if file is ignored by git
-            is_ignored = subprocess.run(['git', 'check-ignore', '-q', filepath]).returncode == 0
+            is_ignored = git_repository and subprocess.run(
+                ['git', 'check-ignore', '-q', filepath], capture_output=True
+            ).returncode == 0
             if is_ignored:
                 continue
 
-            # Check filename
-            for pat in SENSITIVE_FILENAME_PATTERNS:
-                if re.match(pat, fname, re.IGNORECASE) and not fname.endswith('.example'):
-                    violations.append(f"[UNIGNORED FILE] {filepath} should be added to .gitignore!")
+            # Ignore-status checks are meaningful only in a Git work tree.
+            # A source archive has no index or ignore rules to query.
+            if git_repository:
+                for pat in SENSITIVE_FILENAME_PATTERNS:
+                    if re.match(pat, fname, re.IGNORECASE) and not fname.endswith('.example'):
+                        violations.append(f"[UNIGNORED FILE] {filepath} should be added to .gitignore!")
 
             # Check file size (no single file over 50MB should be committed without Git LFS)
-            try:
-                size_mb = os.path.getsize(filepath) / (1024 * 1024)
-                if size_mb > 50:
-                    violations.append(f"[LARGE FILE >50MB] {filepath} ({size_mb:.1f}MB) is NOT ignored!")
-            except OSError:
-                pass
+            if git_repository:
+                try:
+                    size_mb = os.path.getsize(filepath) / (1024 * 1024)
+                    if size_mb > 50:
+                        violations.append(f"[LARGE FILE >50MB] {filepath} ({size_mb:.1f}MB) is NOT ignored!")
+                except OSError:
+                    pass
 
             # Check contents of code and configuration files
             if relpath in EXEMPT_FILES or not fname.endswith(
@@ -155,5 +179,3 @@ def scan_repository():
 if __name__ == '__main__':
     success = scan_repository()
     sys.exit(0 if success else 1)
-
-# Agri-Saarthi 2026 Sync

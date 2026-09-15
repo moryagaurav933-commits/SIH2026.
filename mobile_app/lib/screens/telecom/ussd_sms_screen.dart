@@ -13,7 +13,12 @@ class UssdSmsScreen extends StatefulWidget {
 
 class _UssdSmsScreenState extends State<UssdSmsScreen> with SingleTickerProviderStateMixin {
   late TabController _tabController;
-  final Dio _dio = Dio(BaseOptions(baseUrl: 'http://localhost:8000/api/v1/telecom'));
+  final Dio _dio = Dio(BaseOptions(
+    baseUrl: const String.fromEnvironment(
+      'API_BASE_URL',
+      defaultValue: 'http://10.0.2.2:8000',
+    ) + '/api/v1/telecom',
+ ));
 
   // USSD State
   String _dialedNumber = '*123#';

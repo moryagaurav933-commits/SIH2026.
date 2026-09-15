@@ -1,0 +1,557 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Kisan Chat — Live App Preview</title>
+<style>
+  :root { color-scheme: light; }
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  body {
+    font-family: -apple-system, "Segoe UI", Roboto, "Noto Sans", "Noto Sans Devanagari", sans-serif;
+    background: #E9EBE6; display: flex; align-items: center; justify-content: center;
+    min-height: 100vh; padding: 16px;
+  }
+  .phone {
+    width: 100%; max-width: 420px; height: 88vh; max-height: 860px;
+    background: #F8FAF6; border-radius: 26px; overflow: hidden; position: relative;
+    display: flex; flex-direction: column;
+    box-shadow: 0 24px 60px rgba(13,43,31,.28); border: 1px solid #d7dad2;
+  }
+  .view { flex: 1; display: none; flex-direction: column; min-height: 0; }
+  .view.active { display: flex; }
+
+  /* ---------- shared header ---------- */
+  .hdr {
+    background: rgba(248,250,246,.98); border-bottom: 1px solid #E7E4DC;
+    padding: 12px 14px; display: flex; align-items: center; gap: 10px; flex: 0 0 auto;
+  }
+  .circ {
+    width: 36px; height: 36px; border-radius: 50%; background: #FDFBF7;
+    border: 1px solid #E7E4DC; display: flex; align-items: center; justify-content: center;
+    color: #1B4332; font-size: 15px; flex: 0 0 auto; cursor: pointer;
+  }
+  .hdr .emoji { font-size: 20px; }
+  .hdr .titles { flex: 1; min-width: 0; }
+  .hdr .title { font-size: 15px; font-weight: 800; color: #1E2420; letter-spacing: -.2px;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .hdr .sub { font-size: 10.5px; font-weight: 600; color: #6E756F; letter-spacing: .4px;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .pill {
+    display: inline-flex; align-items: center; gap: 4px; padding: 4px 8px;
+    background: #ECFDF5; border: 1px solid #A7F3D0; border-radius: 100px;
+    color: #047857; font-size: 10px; font-weight: 700; white-space: nowrap; flex: 0 0 auto;
+  }
+  .dot { width: 8px; height: 8px; border-radius: 50%; background: #047857; }
+
+  /* ---------- HOME ---------- */
+  .home-body { flex: 1; overflow-y: auto; padding: 16px 14px 90px; }
+  .sec-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+  .sec-l { display: flex; align-items: center; gap: 2px; }
+  .sec-idx { color: #A3824C; font-weight: 800; font-size: 11px; font-family: monospace; }
+  .sec-t { color: #1E2420; font-weight: 800; font-size: 11px; letter-spacing: .8px; }
+  .sec-r { color: #6E756F; font-size: 9.5px; font-family: monospace; }
+  .card {
+    background: #fff; border: 1px solid #E7E4DC; border-radius: 18px; overflow: hidden; cursor: pointer;
+    transition: transform .12s ease, box-shadow .12s ease;
+  }
+  .card:active { transform: scale(.99); }
+  .disp { padding: 14px; }
+  .disp + .disp { border-top: 1px solid #E7E4DC; }
+  .disp-top { display: flex; justify-content: space-between; align-items: center; }
+  .disp-name { color: #1B4332; font-size: 10px; font-weight: 800; font-family: monospace; }
+  .disp-zone { color: #6E756F; font-size: 9.5px; font-family: monospace; }
+  .disp-ago { color: #6E756F; font-size: 9px; font-family: monospace; }
+  .disp-text { color: #1E2420; font-size: 12px; line-height: 1.35; margin: 6px 0; }
+  .disp-tags { color: #6E756F; font-size: 9px; font-family: monospace; }
+  .disp-tags b { color: #A3824C; }
+  .card-foot {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 10px 14px; border-top: 1px solid #E7E4DC;
+  }
+  .card-foot .l { color: #6E756F; font-size: 10px; font-family: monospace; }
+  .card-foot .r { color: #1B4332; font-size: 10.5px; font-weight: 800; font-family: monospace; }
+  .home-hint { text-align: center; font-size: 10.5px; color: #8a8f89; margin-top: 14px; }
+
+  /* dock */
+  .dock {
+    position: absolute; left: 12px; right: 12px; bottom: 12px; height: 64px;
+    background: #0D2B1F; border-radius: 20px; display: flex; align-items: center;
+    justify-content: space-around; box-shadow: 0 10px 28px rgba(13,43,31,.35);
+  }
+  .dock-item { display: flex; flex-direction: column; align-items: center; gap: 3px; cursor: pointer; }
+  .dock-item .ic { font-size: 18px; filter: grayscale(.2); opacity: .7; }
+  .dock-item .lb { font-size: 8.5px; color: #cfe3d6; font-weight: 700; }
+  .dock-item.active .ic { opacity: 1; }
+  .dock-item.active .lb { color: #94D5A8; }
+
+  /* ---------- COMMUNITIES ---------- */
+  .comm-body { flex: 1; overflow-y: auto; padding: 14px 14px 24px; }
+  .comm-create {
+    width: 100%; background: #1B4332; color: #fff; border: none; border-radius: 14px;
+    padding: 13px; font-size: 14px; font-weight: 800; cursor: pointer; font-family: inherit;
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    box-shadow: 0 8px 20px rgba(27,67,50,.22);
+  }
+  .comm-create:active { transform: scale(.99); }
+  .comm-create .plus { font-size: 18px; }
+  .comm-sec { margin-top: 18px; }
+  .comm-sec-t { font-size: 11px; font-weight: 800; letter-spacing: .5px; color: #1E2420;
+    margin-bottom: 9px; display: flex; align-items: center; gap: 6px; }
+  .comm-sec-t .cnt { color: #6E756F; font-weight: 600; font-family: monospace; }
+  .comm-card {
+    background: #fff; border: 1px solid #E7E4DC; border-radius: 16px; padding: 12px;
+    display: flex; align-items: center; gap: 12px; margin-bottom: 10px; cursor: pointer;
+    transition: transform .12s ease;
+  }
+  .comm-card:active { transform: scale(.99); }
+  .comm-ic { width: 46px; height: 46px; border-radius: 14px; background: #E8F0EC;
+    display: flex; align-items: center; justify-content: center; font-size: 22px; flex: 0 0 auto; }
+  .comm-meta { flex: 1; min-width: 0; }
+  .comm-name { font-size: 14px; font-weight: 800; color: #1E2420;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .comm-topic { font-size: 11px; color: #6E756F; margin-top: 1px;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .comm-last { font-size: 11.5px; color: #4a524c; margin-top: 4px;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .comm-by { font-size: 9.5px; color: #8a8f89; margin-top: 4px; }
+  .comm-side { display: flex; flex-direction: column; align-items: flex-end; gap: 7px; flex: 0 0 auto; }
+  .comm-members { font-size: 10px; color: #6E756F; font-family: monospace; white-space: nowrap; }
+  .join-btn { background: #ECFDF5; border: 1px solid #A7F3D0; color: #047857;
+    font-size: 11px; font-weight: 800; padding: 7px 12px; border-radius: 100px;
+    cursor: pointer; font-family: inherit; white-space: nowrap; }
+  .join-btn:active { transform: scale(.97); }
+  .joined-tag { font-size: 10px; color: #047857; font-weight: 800; white-space: nowrap; }
+  .comm-empty { text-align: center; font-size: 11px; color: #8a8f89; padding: 8px 0 2px; }
+
+  /* create bottom-sheet overlay */
+  .overlay { position: absolute; inset: 0; background: rgba(13,43,31,.45);
+    display: none; align-items: flex-end; z-index: 20; }
+  .overlay.active { display: flex; }
+  .sheet { background: #F8FAF6; width: 100%; border-radius: 22px 22px 0 0; padding: 18px 16px 22px;
+    box-shadow: 0 -14px 40px rgba(13,43,31,.3); }
+  .sheet h3 { font-size: 16px; color: #1E2420; margin-bottom: 3px; }
+  .sheet .sh-sub { font-size: 11px; color: #6E756F; margin-bottom: 14px; }
+  .field { margin-bottom: 12px; }
+  .field label { display: block; font-size: 11px; font-weight: 700; color: #4a524c; margin-bottom: 5px; }
+  .field input { width: 100%; background: #fff; border: 1px solid #E7E4DC; border-radius: 12px;
+    padding: 11px 14px; font-size: 14px; color: #1E2420; outline: none; font-family: inherit; }
+  .field input:focus { border-color: #1B4332; }
+  .emoji-row { display: flex; gap: 8px; flex-wrap: wrap; }
+  .emoji-opt { width: 40px; height: 40px; border-radius: 12px; border: 1px solid #E7E4DC;
+    background: #fff; font-size: 20px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+  .emoji-opt.sel { border-color: #1B4332; background: #E8F0EC; }
+  .sheet-actions { display: flex; gap: 10px; margin-top: 6px; }
+  .sheet-actions button { flex: 1; padding: 12px; border-radius: 12px; font-size: 14px;
+    font-weight: 800; cursor: pointer; font-family: inherit; border: none; }
+  .btn-cancel { background: #EDEFEA; color: #4a524c; }
+  .btn-make { background: #1B4332; color: #fff; }
+
+  /* ---------- CHAT ---------- */
+  .banner { background: #E8F0EC; color: #1B4332; font-size: 11px; font-weight: 600;
+    padding: 8px 14px; display: flex; align-items: center; gap: 6px; flex: 0 0 auto; }
+  .msgs { flex: 1; overflow-y: auto; padding: 14px 12px 6px; min-height: 0; }
+  .row { display: flex; align-items: flex-end; gap: 8px; margin-bottom: 10px; }
+  .row.me { justify-content: flex-end; }
+  .avatar { width: 30px; height: 30px; border-radius: 50%; flex: 0 0 auto;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 10px; font-weight: 800; border: 1px solid #E7E4DC; }
+  .avatar.other { background: #E8F0EC; color: #1B4332; }
+  .avatar.me { background: #1B4332; color: #fff; }
+  .bubble { max-width: 72%; padding: 8px 12px; border-radius: 14px; font-size: 13.5px; line-height: 1.35; }
+  .bubble.other { background: #fff; border: 1px solid #E7E4DC; border-bottom-left-radius: 4px; color: #1E2420; }
+  .bubble.me { background: #1B4332; color: #fff; border-bottom-right-radius: 4px; }
+  .sender { font-size: 11px; font-weight: 800; color: #2D6A4F; margin-bottom: 2px; }
+  .meta { font-size: 9.5px; margin-top: 3px; display: flex; align-items: center; gap: 4px; }
+  .bubble.other .meta { color: #6E756F; }
+  .bubble.me .meta { color: rgba(255,255,255,.75); justify-content: flex-end; }
+  .chat-empty { text-align: center; font-size: 12px; color: #8a8f89; padding: 30px 20px; }
+  .typing { background: #fff; border: 1px solid #E7E4DC; border-radius: 14px;
+    padding: 10px 14px; font-size: 12px; font-style: italic; color: #6E756F; display: inline-block; }
+  .composer { background: #FDFBF7; border-top: 1px solid #E7E4DC;
+    padding: 8px 12px; display: flex; align-items: center; gap: 8px; flex: 0 0 auto; }
+  .composer input { flex: 1; background: #F8FAF6; border: 1px solid #E7E4DC; border-radius: 16px;
+    padding: 11px 16px; font-size: 14px; color: #1E2420; outline: none; font-family: inherit; }
+  .composer input::placeholder { color: #9aa09a; }
+  .send { width: 48px; height: 48px; border-radius: 50%; background: #1B4332; border: none;
+    display: flex; align-items: center; justify-content: center; cursor: pointer; flex: 0 0 auto; }
+  .send svg { width: 20px; height: 20px; fill: #fff; }
+  .tools { display: flex; gap: 14px; justify-content: center; padding: 6px 0; background: #F8FAF6; flex: 0 0 auto; }
+  .tools button { background: none; border: none; color: #6E756F; font-size: 11px; cursor: pointer;
+    text-decoration: underline; font-family: inherit; }
+  .note { text-align: center; font-size: 10px; color: #8a8f89; padding: 0 16px 8px; background:#F8FAF6; flex: 0 0 auto; }
+</style>
+</head>
+<body>
+  <div class="phone">
+
+    <!-- ===================== HOME VIEW ===================== -->
+    <div class="view active" id="homeView">
+      <div class="hdr">
+        <span class="emoji">🌱</span>
+        <div class="titles">
+          <div class="title">कृषि-सारथी</div>
+          <div class="sub">Rameshwar Singh · Sonipat, Haryana</div>
+        </div>
+        <div class="pill"><span class="dot"></span> ONLINE</div>
+      </div>
+
+      <div class="home-body">
+        <div class="sec-head">
+          <div class="sec-l">
+            <span class="sec-idx">04 /&nbsp;</span>
+            <span class="sec-t">KISAN CHAT · COMMUNITIES</span>
+          </div>
+          <span class="sec-r">Peer-to-Peer Chat</span>
+        </div>
+
+        <div class="card" onclick="showCommunities()">
+          <div class="disp">
+            <div class="disp-top">
+              <div><span class="disp-name">JAGBIR SINGH</span> <span class="disp-zone">/ सोनीपत गाँव समूह</span></div>
+              <span class="disp-ago">15 MIN AGO</span>
+            </div>
+            <div class="disp-text">Mera gehu 45 din ka ho gaya hai. Kal sham ko halki sinchai ki thi, nami badhiya ban gayi hai.</div>
+            <div class="disp-tags">PLOT: 3.8 ACRES&nbsp;&nbsp;•&nbsp;&nbsp;MOISTURE: <b>OPTIMAL (44%)</b></div>
+          </div>
+          <div class="disp">
+            <div class="disp-top">
+              <div><span class="disp-name">MUKESH SHARMA</span> <span class="disp-zone">/ मंडी भाव अपडेट</span></div>
+              <span class="disp-ago">1 HR AGO</span>
+            </div>
+            <div class="disp-text">Rai mandi mein sarson ka bhav ₹5,450/qtl mila aaj. Kisaan bhai dhyan dein.</div>
+            <div class="disp-tags">COMMODITY: MUSTARD&nbsp;&nbsp;•&nbsp;&nbsp;<b>₹5,450 / QTL SPOT</b></div>
+          </div>
+          <div class="card-foot">
+            <span class="l">Tap to open Kisan Chat — communities</span>
+            <span class="r">Open →</span>
+          </div>
+        </div>
+
+        <div class="home-hint">👆 ऊपर card ya neeche dock ka “Kisan Chat” dabao — समुदाय (communities) khulenge</div>
+      </div>
+
+      <div class="dock">
+        <div class="dock-item"><span class="ic">🏠</span><span class="lb">Home</span></div>
+        <div class="dock-item"><span class="ic">📷</span><span class="lb">Fasal</span></div>
+        <div class="dock-item"><span class="ic">📈</span><span class="lb">Mandi</span></div>
+        <div class="dock-item active" onclick="showCommunities()"><span class="ic">💬</span><span class="lb">Kisan Chat</span></div>
+        <div class="dock-item"><span class="ic">▦</span><span class="lb">13</span></div>
+      </div>
+    </div>
+
+    <!-- ===================== COMMUNITIES VIEW ===================== -->
+    <div class="view" id="communitiesView">
+      <div class="hdr">
+        <div class="circ" onclick="showHome()">‹</div>
+        <span class="emoji">🌾</span>
+        <div class="titles">
+          <div class="title">Kisan Chat</div>
+          <div class="sub">समुदाय · Communities (P2P मेश)</div>
+        </div>
+        <div class="pill"><span class="dot"></span> ऑफ़लाइन</div>
+      </div>
+
+      <div class="comm-body" id="commBody"><!-- rendered by JS --></div>
+    </div>
+
+    <!-- ===================== CHAT VIEW ===================== -->
+    <div class="view" id="chatView">
+      <div class="hdr">
+        <div class="circ" onclick="showCommunities()">‹</div>
+        <span class="emoji">🌾</span>
+        <div class="titles">
+          <div class="title" id="chatTitle">Kisan Chat</div>
+          <div class="sub" id="chatSub">गाँव समूह · P2P मेश</div>
+        </div>
+        <div class="pill"><span class="dot"></span> <span id="chatOnline">4 सदस्य</span></div>
+      </div>
+
+      <div class="banner">🔕 ऑफ़लाइन मेश पर सुरक्षित · पुराने संदेश बिना इंटरनेट दिखते हैं</div>
+
+      <div class="msgs" id="msgs"></div>
+
+      <div class="composer">
+        <input id="input" type="text" placeholder="संदेश लिखें… (फसल, रोग, भाव)" autocomplete="off" />
+        <button class="send" id="send" title="भेजें">
+          <svg viewBox="0 0 24 24"><path d="M2 21l21-9L2 3v7l15 2-15 2v7z"/></svg>
+        </button>
+      </div>
+
+      <div class="tools">
+        <button onclick="location.reload()">🔄 Reload (offline save test)</button>
+        <button onclick="clearChat()">🗑 इस समुदाय की चैट साफ़</button>
+      </div>
+      <div class="note">यह Flutter app का hu-ba-hu preview hai — Home → समुदाय → चैट, wahi seed, reply logic, community create/join & offline save (localStorage). App me jo change hoga, yaha bhi milega.</div>
+    </div>
+
+    <!-- ===================== CREATE-COMMUNITY SHEET ===================== -->
+    <div class="overlay" id="overlay">
+      <div class="sheet">
+        <h3>नया समुदाय बनाएँ</h3>
+        <div class="sh-sub">Create a farmer community — दूसरे kisaan bhai ise join kar sakte hain.</div>
+        <div class="field">
+          <label>समुदाय का नाम (Community name)</label>
+          <input id="cName" type="text" placeholder="जैसे: सोनीपत गन्ना किसान" maxlength="40" autocomplete="off" />
+        </div>
+        <div class="field">
+          <label>विषय (Topic / description)</label>
+          <input id="cTopic" type="text" placeholder="जैसे: गन्ना · कीट-रोग चर्चा" maxlength="50" autocomplete="off" />
+        </div>
+        <div class="field">
+          <label>आइकन चुनें (Pick an icon)</label>
+          <div class="emoji-row" id="emojiRow"></div>
+        </div>
+        <div class="sheet-actions">
+          <button class="btn-cancel" onclick="closeCreate()">रद्द करें</button>
+          <button class="btn-make" onclick="submitCreate()">बनाएँ ＋</button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+<script>
+  /* =========================================================
+     Kisan Chat — Communities + offline chat
+     Modular mirror of Dart KisanChatService (Flutter-ready).
+     Two stores:
+       - COMMUNITY_KEY : list of communities (create/join)
+       - STORAGE_KEY   : all messages, each tagged with communityId
+     ========================================================= */
+  const STORAGE_KEY   = 'kisan_chat_messages_v1';
+  const COMMUNITY_KEY = 'kisan_communities_v1';
+  const DEFAULT_COMMUNITY = 'village-sonipat';
+  const ME_ID = 'rameshwar-singh';
+  const ME_NAME = 'Rameshwar Singh';
+  const PEERS = [
+    ['jagbir-singh', 'Jagbir Singh'],
+    ['mukesh-sharma', 'Mukesh Sharma'],
+    ['suresh-yadav', 'Suresh Yadav'],
+  ];
+  const EMOJIS = ['🌾','🌱','🦠','📈','🚜','💧','🐄','🥭'];
+
+  let communities = [];
+  let messages = [];
+  let activeCommunityId = DEFAULT_COMMUNITY;
+  let createEmoji = '🌾';
+
+  /* ---------- seed data ---------- */
+  function seedCommunities() {
+    return [
+      { id:'village-sonipat', name:'सोनीपत गाँव समूह', topic:'सामान्य चर्चा · गेहूँ/सरसों', emoji:'🌾', createdBy:'Jagbir Singh',  memberCount:12, joined:true  },
+      { id:'wheat-disease',   name:'गेहूँ रोग चर्चा',   topic:'रोग व उपचार',              emoji:'🦠', createdBy:'Suresh Yadav',  memberCount:38, joined:false },
+      { id:'mandi-bhav',      name:'मंडी भाव अपडेट',    topic:'रोज़ के दाम',              emoji:'📈', createdBy:'Mukesh Sharma', memberCount:54, joined:false },
+      { id:'organic',         name:'जैविक खेती',        topic:'ऑर्गैनिक तरीके',           emoji:'🌱', createdBy:'Rajbir Dhaka',  memberCount:21, joined:false },
+    ];
+  }
+  function seedConversation() {
+    const now = Date.now(); const min = 60000;
+    const m = (minAgo, cid, id, name, text, me=false) =>
+      ({ id: `seed-${cid}-${id}-${minAgo}`, communityId: cid, senderId: id, senderName: name, text,
+         timestamp: new Date(now - minAgo*min).toISOString(), isMe: me });
+    return [
+      // --- सोनीपत गाँव समूह (default) ---
+      m(180,'village-sonipat','jagbir-singh','Jagbir Singh','Ram-Ram kisaan bhaiyo! Mera gehu 45 din ka ho gaya. Kal halki sinchai ki thi, nami badhiya ban gayi.'),
+      m(150,'village-sonipat','mukesh-sharma','Mukesh Sharma','Ram-Ram! Rai mandi mein aaj sarson ₹5,450/qtl chal raha hai. Kisaan bhai dhyan dein.'),
+      m(90 ,'village-sonipat','suresh-yadav','Suresh Yadav','Bhaiyo, mere gehu ki patti par pile dhabbe aa rahe hain. Kya yeh pila ratua hai?'),
+      m(80 ,'village-sonipat','rameshwar-singh','Rameshwar Singh','Haan Suresh bhai, lagta to pila ratua (Yellow Rust) hi hai. Kaunsi kism boyi thi?', true),
+      m(60 ,'village-sonipat','jagbir-singh','Jagbir Singh','Propiconazole 25% EC @ 1ml/litre pani spray karo — 200ml prati acre. 15 din baad dobara. HD-3086 rog-rodhak kism hai.'),
+      // --- गेहूँ रोग चर्चा ---
+      m(200,'wheat-disease','suresh-yadav','Suresh Yadav','Is group mein sirf rog aur upchar ki baat karein. Patti ki photo bhi daal sakte ho.'),
+      m(120,'wheat-disease','jagbir-singh','Jagbir Singh','Pila ratua ke liye Propiconazole sabse asardar hai. Subah-subah spray karo.'),
+      // --- मंडी भाव अपडेट ---
+      m(240,'mandi-bhav','mukesh-sharma','Mukesh Sharma','Aaj ke bhav — Sarson ₹5,450, Gehu ₹2,275, Chana ₹5,100 prati qtl.'),
+      m(60 ,'mandi-bhav','jagbir-singh','Jagbir Singh','Sonipat mandi mein gehu ka rate aaj thoda upar hai.'),
+      // --- जैविक खेती ---
+      m(300,'organic','rajbir-dhaka','Rajbir Dhaka','Jeevamrut aur neem khali se acchi paidawar mil rahi hai. Rasayan kam karo bhaiyo.'),
+    ];
+  }
+
+  /* ---------- persistence ---------- */
+  function loadCommunities() {
+    try { const raw = localStorage.getItem(COMMUNITY_KEY); if (raw) communities = JSON.parse(raw); }
+    catch(e) { communities = []; }
+    if (!communities || communities.length === 0) { communities = seedCommunities(); persistCommunities(); }
+  }
+  function persistCommunities() { try { localStorage.setItem(COMMUNITY_KEY, JSON.stringify(communities)); } catch(e){} }
+
+  function load() {
+    try { const raw = localStorage.getItem(STORAGE_KEY); if (raw) messages = JSON.parse(raw); }
+    catch(e) { messages = []; }
+    if (!messages || messages.length === 0) { messages = seedConversation(); persist(); }
+    // migrate any old message that predates communities → default village group
+    let changed = false;
+    for (const m of messages) { if (!m.communityId) { m.communityId = DEFAULT_COMMUNITY; changed = true; } }
+    if (changed) persist();
+  }
+  function persist() { try { localStorage.setItem(STORAGE_KEY, JSON.stringify(messages)); } catch(e){} }
+
+  /* ---------- community helpers (map 1:1 to Dart methods) ---------- */
+  function communityGet(id)     { return communities.find(c => c.id === id); }
+  function communitiesJoined()  { return communities.filter(c => c.joined); }
+  function communitiesDiscover(){ return communities.filter(c => !c.joined); }
+  function messagesFor(id)      { return messages.filter(m => m.communityId === id); }
+  function lastMessageFor(id)   { const l = messagesFor(id); return l.length ? l[l.length-1] : null; }
+
+  function createCommunity(name, topic, emoji) {
+    const id = 'c-' + Date.now();
+    communities.unshift({ id, name, topic: topic || 'नया समुदाय', emoji: emoji || '🌾',
+      createdBy: ME_NAME, memberCount: 1, joined: true });
+    persistCommunities();
+    messages.push({ id: String(Date.now()), communityId: id, senderId: ME_ID, senderName: ME_NAME,
+      text: `नमस्ते! Maine "${name}" samuday banaya hai. Kisaan bhai judein aur charcha karein. 🌾`,
+      timestamp: new Date().toISOString(), isMe: true });
+    persist();
+    return id;
+  }
+  function joinCommunity(id) {
+    const c = communityGet(id);
+    if (c && !c.joined) { c.joined = true; c.memberCount += 1; persistCommunities(); }
+  }
+
+  /* ---------- reply logic (unchanged from KisanChatService) ---------- */
+  function replyFor(text) {
+    const q = text.toLowerCase();
+    if (q.includes('रतुआ')||q.includes('rust')||q.includes('पीला')||q.includes('gehu')||q.includes('गेहूं')||q.includes('wheat'))
+      return 'Bhai mere khet mein bhi pila ratua dikha tha. Propiconazole 25% EC @ 1ml/litre pani spray karo — 200ml prati acre. HD-3086 kism rog-rodhak hai.';
+    if (q.includes('धान')||q.includes('rice')||q.includes('झुलसा')||q.includes('blast')||q.includes('paddy'))
+      return 'Dhan ke jhulsa ke liye Tricyclazole 75% WP @ 0.6g/litre spray karo. Khet se extra pani nikal do.';
+    if (q.includes('कपास')||q.includes('cotton')||q.includes('सुंडी')||q.includes('bollworm'))
+      return 'Gulabi sundi ke liye pheromone trap lagao — 8 prati acre. Emamectin benzoate 5% SG bhi asardar hai.';
+    if (q.includes('bhav')||q.includes('भाव')||q.includes('mandi')||q.includes('मंडी')||q.includes('price')||q.includes('rate'))
+      return 'Aaj mandi mein bhav theek chal raha hai. Subah jaldi lekar jao to behtar rate milta hai.';
+    if (q.includes('मौसम')||q.includes('weather')||q.includes('barish')||q.includes('बारिश')||q.includes('rain'))
+      return 'Agle 2 din halki barish ka anuman hai. Spray karna hai to aaj hi kar lo.';
+    if (q.includes('ram-ram')||q.includes('namaste')||q.includes('नमस्ते')||q.includes('hello')||q.includes('hi '))
+      return 'Ram-Ram bhai! Khet ka kya haal hai?';
+    return 'Sahi kaha bhai. Hamare gaon mein bhi aisa hi chal raha hai. Aur koi jankari chahiye to batao.';
+  }
+
+  /* ---------- UI helpers ---------- */
+  function initials(name){ const p=name.trim().split(/\s+/); return (p.length>=2?(p[0][0]+p[1][0]):name[0]||'?').toUpperCase(); }
+  function fmtTime(iso){ const t=new Date(iso); let h=t.getHours()%12; if(h===0)h=12;
+    const m=String(t.getMinutes()).padStart(2,'0'); return `${h}:${m} ${t.getHours()<12?'AM':'PM'}`; }
+  function esc(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+  /* ---------- COMMUNITIES render ---------- */
+  function renderCommunities(){
+    const box = document.getElementById('commBody');
+    const joined = communitiesJoined();
+    const disc = communitiesDiscover();
+    let html = '';
+    html += `<button class="comm-create" onclick="openCreate()"><span class="plus">＋</span> नया समुदाय बनाएँ (Create Community)</button>`;
+
+    html += `<div class="comm-sec"><div class="comm-sec-t">मेरे समुदाय (My Communities) <span class="cnt">· ${joined.length}</span></div>`;
+    if (joined.length === 0) html += `<div class="comm-empty">अभी कोई समुदाय नहीं — नीचे से join karein ya naya banayein.</div>`;
+    for (const c of joined){
+      const last = lastMessageFor(c.id);
+      const lastTxt = last ? `${last.isMe ? 'आप' : esc(last.senderName.split(' ')[0])}: ${esc(last.text)}` : 'कोई संदेश नहीं';
+      html += `<div class="comm-card" onclick="openCommunity('${c.id}')">
+        <div class="comm-ic">${c.emoji}</div>
+        <div class="comm-meta">
+          <div class="comm-name">${esc(c.name)}</div>
+          <div class="comm-topic">${esc(c.topic)}</div>
+          <div class="comm-last">${lastTxt}</div>
+        </div>
+        <div class="comm-side"><span class="comm-members">👥 ${c.memberCount}</span><span class="joined-tag">✓ शामिल</span></div>
+      </div>`;
+    }
+    html += `</div>`;
+
+    if (disc.length){
+      html += `<div class="comm-sec"><div class="comm-sec-t">समुदाय खोजें (किसानों द्वारा बनाए) <span class="cnt">· ${disc.length}</span></div>`;
+      for (const c of disc){
+        html += `<div class="comm-card" style="cursor:default">
+          <div class="comm-ic">${c.emoji}</div>
+          <div class="comm-meta">
+            <div class="comm-name">${esc(c.name)}</div>
+            <div class="comm-topic">${esc(c.topic)}</div>
+            <div class="comm-by">बनाया: ${esc(c.createdBy)}</div>
+          </div>
+          <div class="comm-side"><span class="comm-members">👥 ${c.memberCount}</span><button class="join-btn" onclick="doJoin(event,'${c.id}')">＋ शामिल</button></div>
+        </div>`;
+      }
+      html += `</div>`;
+    }
+    box.innerHTML = html;
+  }
+  function doJoin(ev, id){ ev.stopPropagation(); joinCommunity(id); renderCommunities(); }
+  function openCommunity(id){ activeCommunityId = id; showChat(); }
+
+  /* ---------- CHAT render ---------- */
+  function render(typing){
+    const c = communityGet(activeCommunityId);
+    if (c){
+      document.getElementById('chatTitle').textContent = c.name;
+      document.getElementById('chatSub').textContent = `${c.topic} · P2P मेश`;
+      document.getElementById('chatOnline').textContent = `${c.memberCount} सदस्य`;
+    }
+    const box = document.getElementById('msgs');
+    const list = messagesFor(activeCommunityId);
+    let html = '';
+    if (list.length === 0 && !typing){
+      html = `<div class="chat-empty">अभी कोई संदेश नहीं.<br>पहला संदेश भेजकर charcha shuru karein 🌾</div>`;
+    }
+    for (const m of list){
+      const av = `<div class="avatar ${m.isMe?'me':'other'}">${initials(m.senderName)}</div>`;
+      const name = m.isMe ? '' : `<div class="sender">${esc(m.senderName)}</div>`;
+      const check = m.isMe ? ' <span>✓✓</span>' : '';
+      const bub = `<div class="bubble ${m.isMe?'me':'other'}">${name}${esc(m.text)}<div class="meta">${fmtTime(m.timestamp)}${check}</div></div>`;
+      html += m.isMe ? `<div class="row me">${bub}${av}</div>` : `<div class="row">${av}${bub}</div>`;
+    }
+    if (typing) html += `<div class="row"><div class="typing">कोई किसान लिख रहा है…</div></div>`;
+    box.innerHTML = html; box.scrollTop = box.scrollHeight;
+  }
+  function send(){
+    const inp = document.getElementById('input'); const text = inp.value.trim(); if(!text) return; inp.value='';
+    const cid = activeCommunityId;
+    messages.push({ id:String(Date.now()), communityId:cid, senderId:ME_ID, senderName:ME_NAME, text, timestamp:new Date().toISOString(), isMe:true });
+    persist(); render(true);
+    setTimeout(()=>{ const peer = PEERS[new Date().getSeconds()%PEERS.length];
+      messages.push({ id:String(Date.now()), communityId:cid, senderId:peer[0], senderName:peer[1], text:replyFor(text), timestamp:new Date().toISOString(), isMe:false });
+      persist(); if (activeCommunityId === cid) render(false);
+    },1300);
+  }
+  function clearChat(){ messages = messages.filter(m => m.communityId !== activeCommunityId); persist(); render(false); }
+
+  /* ---------- create-community sheet ---------- */
+  function openCreate(){
+    createEmoji = '🌾';
+    document.getElementById('cName').value = '';
+    document.getElementById('cTopic').value = '';
+    renderEmojiRow();
+    document.getElementById('overlay').classList.add('active');
+    setTimeout(()=>document.getElementById('cName').focus(),50);
+  }
+  function closeCreate(){ document.getElementById('overlay').classList.remove('active'); }
+  function renderEmojiRow(){
+    document.getElementById('emojiRow').innerHTML =
+      EMOJIS.map(e=>`<div class="emoji-opt ${e===createEmoji?'sel':''}" onclick="pickEmoji('${e}')">${e}</div>`).join('');
+  }
+  function pickEmoji(e){ createEmoji = e; renderEmojiRow(); }
+  function submitCreate(){
+    const name = document.getElementById('cName').value.trim();
+    if (!name){ document.getElementById('cName').focus(); return; }
+    const topic = document.getElementById('cTopic').value.trim();
+    const id = createCommunity(name, topic, createEmoji);
+    closeCreate();
+    activeCommunityId = id;
+    showChat();
+  }
+
+  /* ---------- navigation (Home → Communities → Chat) ---------- */
+  function hideAll(){ document.querySelectorAll('.view').forEach(v=>v.classList.remove('active')); }
+  function showHome(){ hideAll(); document.getElementById('homeView').classList.add('active'); }
+  function showCommunities(){ hideAll(); document.getElementById('communitiesView').classList.add('active'); renderCommunities(); }
+  function showChat(){ hideAll(); document.getElementById('chatView').classList.add('active'); render(false);
+    setTimeout(()=>document.getElementById('input').focus(),50); }
+
+  document.getElementById('send').addEventListener('click', send);
+  document.getElementById('input').addEventListener('keydown', e=>{ if(e.key==='Enter') send(); });
+
+  loadCommunities();
+  load();
+</script>
+</body>
+</html>

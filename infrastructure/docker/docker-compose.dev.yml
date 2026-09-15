@@ -61,5 +61,3 @@ volumes:
     driver: local
   minio_data:
     driver: local
-
-# Agri-Saarthi 2026 Sync

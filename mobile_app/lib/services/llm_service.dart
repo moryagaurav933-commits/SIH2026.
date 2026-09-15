@@ -14,8 +14,11 @@ class LLMService {
     headers: {'Content-Type': 'application/json'},
   ));
 
-  // Default API endpoint (supports Android emulator 10.0.2.2 or local 127.0.0.1)
-  String baseUrl = 'http://localhost:8000/api/v1/ai';
+  // Supply --dart-define=API_BASE_URL=https://api.example.com for a device or release build.
+  String baseUrl = const String.fromEnvironment(
+    'API_BASE_URL',
+    defaultValue: 'http://10.0.2.2:8000',
+  ) + '/api/v1/ai';
   String? _userApiKey;
 
   void setCustomApiKey(String? key) {

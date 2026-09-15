@@ -327,4 +327,3 @@ When demonstrating to the SIH evaluating panel, follow this exact sequence:
 | **Flutter Mobile App** | `mobile_app/lib/main.dart` | Cross-platform client |
 | **ML Training Scripts** | `ml_models/training_scripts/` | Model pipelines |
 
-<!-- Agri-Saarthi 2026 Sync -->

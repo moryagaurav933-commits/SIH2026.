@@ -2,7 +2,10 @@
 Krishi-Saarthi Backend Configuration
 Pydantic Settings for all environment variables
 """
-from pydantic_settings import BaseSettings
+import secrets
+
+from pydantic import Field, field_validator
+from pydantic_settings import BaseSettings, SettingsConfigDict
 from functools import lru_cache
 from typing import Optional
 
@@ -14,14 +17,18 @@ class Settings(BaseSettings):
     DEBUG: bool = True
 
     # ─── Database ───
-    DATABASE_URL: str = "postgresql+asyncpg://krishi_admin:krishi_secure_2026@localhost:5432/krishi_saarthi_master"
-    DATABASE_URL_SYNC: str = "postgresql+psycopg2://krishi_admin:krishi_secure_2026@localhost:5432/krishi_saarthi_master"
+    # Default to SQLite for local development/testing so the app runs out of the box.
+    # Override via environment variables for Postgres in production or staging.
+    DATABASE_URL: str = "sqlite+aiosqlite:///./app.db"
+    DATABASE_URL_SYNC: str = "sqlite:///./app.db"
 
     # ─── Redis ───
     REDIS_URL: str = "redis://localhost:6379/0"
 
     # ─── Security ───
-    SECRET_KEY: str = "krishi-saarthi-super-secret-jwt-key-change-in-production-2026"
+    # A deployment should set SECRET_KEY explicitly.  A random local fallback
+    # avoids shipping a known key while keeping first-run development simple.
+    SECRET_KEY: str = Field(default_factory=lambda: secrets.token_urlsafe(48))
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 10080  # 7 days
 
@@ -44,8 +51,8 @@ class Settings(BaseSettings):
 
     # ─── MinIO (S3-compatible) ───
     MINIO_ENDPOINT: str = "localhost:9000"
-    MINIO_ACCESS_KEY: str = "krishiminio"
-    MINIO_SECRET_KEY: str = "minio_secure_2026"
+    MINIO_ACCESS_KEY: str = ""
+    MINIO_SECRET_KEY: str = ""
     MINIO_BUCKET: str = "krishi-saarthi"
     MINIO_USE_SSL: bool = False
 
@@ -58,25 +65,32 @@ class Settings(BaseSettings):
     CELERY_RESULT_BACKEND: str = "redis://localhost:6379/2"
 
     # ─── CORS ───
-    CORS_ORIGINS: list[str] = ["*"]
+    CORS_ORIGINS: list[str] = [
+        "http://localhost:3000",
+        "http://127.0.0.1:3000",
+        "http://localhost:5173",
+        "http://127.0.0.1:5173",
+    ]
 
-    class Config:
-        # Check both local and parent directory for .env files
-        env_file = (".env", "backend/.env", "../.env")
-        env_file_encoding = "utf-8"
-        case_sensitive = True
+    model_config = SettingsConfigDict(
+        env_file=(".env", "backend/.env", "../.env"),
+        env_file_encoding="utf-8",
+        case_sensitive=True,
+    )
+
+    @field_validator("DEBUG", mode="before")
+    @classmethod
+    def normalize_debug_value(cls, value: object) -> object:
+        # Some hosting control panels expose an environment name instead of a
+        # boolean. Treat their common production names as DEBUG=false.
+        if isinstance(value, str) and value.strip().lower() in {"release", "production", "prod"}:
+            return False
+        return value
 
 
 @lru_cache()
 def get_settings() -> Settings:
     cfg = Settings()
-    # Security check: alert if insecure placeholder key is used in production
-    if not cfg.DEBUG and ("change-in-production" in cfg.SECRET_KEY or "super-secret" in cfg.SECRET_KEY):
-        import logging
-        logging.getLogger("security").critical(
-            "CRITICAL SECURITY RISK: Insecure default SECRET_KEY detected in production mode! "
-            "Please set a cryptographically secure SECRET_KEY in your environment."
-        )
     return cfg
 
 

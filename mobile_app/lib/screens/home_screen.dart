@@ -1216,7 +1216,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
   }
 
   // ==========================================
-  // 6. SECTION 04 / GAON MESH TELEMETRY & NOTES
+  // 6. SECTION 04 / KISAN CHAT — VILLAGE GROUP
   // ==========================================
   Widget _buildGaonMeshNotes() {
     return Column(
@@ -1238,7 +1238,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                   ),
                 ),
                 Text(
-                  'GAON MESH TELEMETRY & NOTES',
+                  'KISAN CHAT · VILLAGE GROUP',
                   style: TextStyle(
                     color: colorStoneText,
                     fontWeight: FontWeight.w800,
@@ -1249,7 +1249,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
               ],
             ),
             const Text(
-              'Peer-to-Peer Relay',
+              'Peer-to-Peer Chat',
               style: TextStyle(
                 color: colorStoneMuted,
                 fontSize: 9.5,
@@ -1435,7 +1435,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       const Text(
-                        'Tap to open village mesh radar & notes',
+                        'Tap to open Kisan Chat — village group',
                         style: TextStyle(
                           color: colorStoneMuted,
                           fontSize: 10,
@@ -1443,7 +1443,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                         ),
                       ),
                       Text(
-                        'Mesh Relay →',
+                        'Open Chat →',
                         style: TextStyle(
                           color: colorPrimary,
                           fontSize: 10.5,
@@ -1669,10 +1669,10 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
             ),
           ),
 
-          // 4. Mesh
+          // 4. Kisan Chat
           _buildDockItem(
-            icon: Icons.hub_rounded,
-            label: 'Mesh',
+            icon: Icons.forum_rounded,
+            label: 'Kisan Chat',
             isActive: false,
             onTap: () => _navigateTo(const MeshScreen()),
           ),
@@ -1867,8 +1867,8 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                     ),
                     _buildFeatureTile(
                       code: 'F-04',
-                      title: 'P2P Nearby Mesh Ferry',
-                      desc: 'Syncs pest alerts and village advisories peer-to-peer with no cellular network.',
+                      title: 'Kisan Chat (P2P)',
+                      desc: 'Chat with nearby farmers about crops & disease cures — peer-to-peer, works with no internet.',
                       onTap: () {
                         Navigator.pop(context);
                         _navigateTo(const MeshScreen());
@@ -2242,7 +2242,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                 contentPadding: EdgeInsets.zero,
                 leading: const Icon(Icons.history_edu_rounded, color: colorSecondary),
                 title: const Text('Activity History', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13)),
-                subtitle: const Text('18 Leaf Scans · 6 Mandi alerts · 3 Mesh transfers', style: TextStyle(fontSize: 11)),
+                subtitle: const Text('18 Leaf Scans · 6 Mandi alerts · 3 Kisan Chat msgs', style: TextStyle(fontSize: 11)),
                 onTap: () {
                   Navigator.pop(context);
                   _navigateTo(const InsuranceScreen());

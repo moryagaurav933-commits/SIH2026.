@@ -402,5 +402,3 @@ dist/assets/index-ay7OzFKf.js   49.45 kB │ gzip: 17.59 kB
 ---
 
 *Authored for SIH 2026 National Grand Finale • Krishi-Saarthi Offline-First Agricultural Intelligence OS*
-
-<!-- Agri-Saarthi 2026 Sync -->

@@ -24,7 +24,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
     await Future.delayed(const Duration(milliseconds: 1500));
     await _deltaSync.sync(
-      baseUrl: 'http://localhost:8000',
+      baseUrl: const String.fromEnvironment(
+        'API_BASE_URL',
+        defaultValue: 'http://10.0.2.2:8000',
+      ),
       authToken: 'demo-bearer-token',
       deviceId: 'krishi-node-01',
       localData: {},

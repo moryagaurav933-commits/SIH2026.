@@ -44,8 +44,7 @@ class FarmerResponse(BaseModel):
     is_active: bool
     created_at: datetime
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class TokenResponse(BaseModel):
@@ -75,8 +74,7 @@ class FarmPlotResponse(BaseModel):
     current_crop: Optional[str] = None
     created_at: datetime
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 # ─── Diagnosis Schemas ───
@@ -113,8 +111,7 @@ class DiagnosisResponse(BaseModel):
     sync_status: str
     diagnosed_at: datetime
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 # ─── Weather Schemas ───
@@ -133,8 +130,7 @@ class WeatherResponse(BaseModel):
     expires_at: datetime
     hours_left_in_cache: Optional[float] = None
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 # ─── Mandi Price Schemas ───
@@ -159,8 +155,7 @@ class MandiPriceResponse(BaseModel):
     price_date: date
     source: str
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 # ─── Mesh Packet Schemas ───
@@ -188,17 +183,17 @@ class MeshPacketResponse(BaseModel):
     received_at: datetime
     expires_at: datetime
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 # ─── Insurance Schemas ───
 class InsuranceClaimSubmit(BaseModel):
     policy_number: Optional[str] = None
     claim_type: str
-    evidence_video_hash: str
+    crop_name: Optional[str] = None
+    evidence_video_hash: Optional[str] = None
     evidence_video_url: Optional[str] = None
-    metadata_signature: str
+    metadata_signature: Optional[str] = ""
     device_metadata: Optional[dict] = None
     gps_lat: Optional[float] = None
     gps_lon: Optional[float] = None
@@ -209,14 +204,30 @@ class InsuranceClaimResponse(BaseModel):
     id: UUID
     farmer_id: UUID
     claim_type: str
+    crop_name: Optional[str] = None
     claim_status: str
     evidence_video_hash: str
+    evidence_video_url: Optional[str] = None
+    device_metadata: Optional[dict] = None
     blockchain_tx_id: Optional[str] = None
     submitted_at: datetime
     settlement_amount: Optional[float] = None
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
+
+
+class InsuranceEvidenceVerifyResponse(BaseModel):
+    claim_id: Optional[UUID] = None
+    is_valid: bool
+    status: str
+    message: str
+    stored_hash: Optional[str] = None
+    computed_hash: Optional[str] = None
+    verified_at: datetime
+
+    model_config = ConfigDict(from_attributes=True)
+
+
 
 
 # ─── Fertilizer Schemas ───
@@ -236,6 +247,8 @@ class FertilizerVerifyResponse(BaseModel):
     confidence: float = 0.0
     message: str = ""
 
+    model_config = ConfigDict(from_attributes=True)
+
 
 # ─── Kriging Schemas ───
 class KrigingQuery(BaseModel):
@@ -251,6 +264,8 @@ class KrigingResponse(BaseModel):
     prediction_hours: int
     generated_at: datetime
     data_points_used: int
+
+    model_config = ConfigDict(from_attributes=True)
 
 
 # ─── Dashboard Schemas ───

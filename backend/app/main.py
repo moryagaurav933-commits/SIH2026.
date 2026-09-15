@@ -10,8 +10,7 @@ import structlog
 
 from app.config import settings
 from app.api.v1.router import api_router
-from app.db.session import engine
-from app.db.base import Base
+from app.db.base import engine, initialize_database
 import app.models  # Register all models with Base
 from app.core.exceptions import KrishiSaarthiException
 
@@ -29,8 +28,7 @@ async def lifespan(app: FastAPI):
     )
     # Auto-initialize database tables
     try:
-        async with engine.begin() as conn:
-            await conn.run_sync(Base.metadata.create_all)
+        await initialize_database()
         logger.info("database_tables_initialized")
     except Exception as e:
         logger.error("database_init_error", error=str(e))
@@ -55,16 +53,7 @@ app = FastAPI(
 # ─── Middleware ───
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:3000",
-        "http://127.0.0.1:3000",
-        "http://localhost:5173",
-        "http://127.0.0.1:5173",
-        "http://localhost:8000",
-        "http://127.0.0.1:8000",
-        "*",
-    ],
-    allow_origin_regex=r"https?://.*",
+    allow_origins=settings.CORS_ORIGINS,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
